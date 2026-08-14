@@ -120,13 +120,26 @@ Kernel sandbox tuning. See [Sandboxing](/docs/guides/sandboxing).
 
 ## `agent`
 
-Agent loop tuning. See [Delegation](/docs/guides/delegation).
+Agent loop tuning. See [Delegation](/docs/guides/delegation) and
+[When ohnapse stops itself](/docs/guides/stopping).
 
 | Key | Type | Description |
 | --- | --- | --- |
-| `maxToolCalls` | integer ≥ 1 | Hard per-run tool-call budget, a backstop against runaway loops. Default 50 |
+| `maxToolCalls` | integer ≥ 1 | Hard per-run tool-call budget. It sits behind the loop checks in [When ohnapse stops itself](/docs/guides/stopping) — a shape that is not recognised still dies here. Default 50 |
 | `maxParallelTasks` | integer ≥ 1 | Widest delegation fan-out run at once; overflow runs in the next wave. Default 4 |
+| `circuit` | object | Thresholds for the three loop shapes that end a turn early. See [When ohnapse stops itself](/docs/guides/stopping) |
 | `agents` | object[] | Sub-agent roles available to the `task` tool, added to — or replacing by name — the built-in `explore` and `coder` |
+
+### `agent.circuit`
+
+Omit a key, or set it to `0`, to keep the default. A value below the minimum is
+treated as the default; there is no off switch.
+
+| Key | Type | Description |
+| --- | --- | --- |
+| `identicalFailure` | integer | Consecutive same-tool, same-target, same-error calls before the turn stops. Default 3, minimum 2 |
+| `editThrash` | integer | Oscillating or no-op `edit`/`write` of one path before the turn stops. Default 3, minimum 2 |
+| `noProgress` | integer | Tool calls with no workspace file change and no new result before the turn stops. Default 8, minimum 3 |
 
 ### `agent.agents[]`
 

@@ -145,6 +145,25 @@
           "items": {
             "$ref": "#/$defs/agentDefinition"
           }
+        },
+        "circuit": {
+          "type": "object",
+          "description": "When the agent stops itself because it is looping. Each value is how many times a shape must repeat before the turn ends. Omit a field or set 0 for the default; values below the minimum are treated as the default.",
+          "additionalProperties": false,
+          "properties": {
+            "identicalFailure": {
+              "type": "integer",
+              "description": "Stop after this many consecutive identical (or near-identical) tool errors on the same target. Default 3; values below 2 use the default."
+            },
+            "editThrash": {
+              "type": "integer",
+              "description": "Stop after this many edits or writes to one file that oscillate (A then B then A) or do not change its contents. Default 3; values below 2 use the default."
+            },
+            "noProgress": {
+              "type": "integer",
+              "description": "Stop after this many consecutive tool calls that change no file and produce no new result. A varied search is progress. Default 8; values below 3 use the default."
+            }
+          }
         }
       }
     },

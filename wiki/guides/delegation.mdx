@@ -46,6 +46,10 @@ of them can run at once, since concurrent reads cannot conflict.
 - Sub-agents **cannot delegate further**. The `task` tool is excluded from every
   nested registry, so the tree is exactly one level deep.
 - Sub-agents share the root run's tool-call budget (`agent.maxToolCalls`, default 50).
+  That budget is the hard cap behind the loop checks — see
+  [When ohnapse stops itself](/docs/guides/stopping).
+- A sub-agent that repeats a failure, thrashes a file, or makes no progress is
+  stopped and returned as a tool error; siblings keep running.
 - The widest fan-out run at once is `agent.maxParallelTasks` (default 4); overflow runs
   in the next wave.
 - A sub-agent that finishes without reporting anything is returned as a tool error

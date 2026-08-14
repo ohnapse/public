@@ -1,0 +1,76 @@
+---
+title: When ohnapse stops itself
+description: Repeating a failure, thrashing a file, or making no progress ends the turn. The tool-call budget is the hard backstop behind those checks.
+---
+
+# When ohnapse stops itself
+
+A run that is stuck still costs tokens. ohnapse watches the tool-call sequence and
+ends the turn when one of three loop shapes completes, rather than waiting for the
+budget to run out. The session stays saveable; the next prompt starts a fresh check.
+
+These checks catch common stalls. They do not catch every loop. A model that varies
+its wording or its targets each turn can keep going until the tool-call budget
+stops it.
+
+## The three shapes
+
+### Identical-failure
+
+The same tool, aimed at the same target, returning the same error — or a close
+paraphrase of it — several times in a row. Default: 3.
+
+"file not found" and "no such file" count as the same stall.
+
+### Edit-thrash
+
+`edit` or `write` on one path whose contents oscillate (A→B→A) or do not change.
+Default: 3.
+
+### No-progress
+
+A sliding window of tool calls in which no workspace file changed and no new
+result appeared. A varied `grep` sequence is progress. Default: 8.
+
+## The tool-call budget
+
+`agent.maxToolCalls` (default 50) is the hard cap behind these checks. If a loop
+does not match a shape, the run still dies when the budget is spent. Sub-agents
+share the root's budget — see [Delegation](/docs/guides/delegation).
+
+## Tuning
+
+Thresholds live under `agent.circuit`. Omit a key, or set it to `0`, to keep the
+default. A value below the minimum is treated as the default; there is no off
+switch.
+
+```json
+{
+  "agent": {
+    "circuit": {
+      "identicalFailure": 3,
+      "editThrash": 3,
+      "noProgress": 8
+    }
+  }
+}
+```
+
+| Key | Default | Minimum | Meaning |
+| --- | --- | --- | --- |
+| `identicalFailure` | 3 | 2 | Consecutive same-tool, same-target, same-error calls before a stop |
+| `editThrash` | 3 | 2 | Oscillating or no-op `edit`/`write` of one path before a stop |
+| `noProgress` | 8 | 3 | Tool calls with no file change and no new result before a stop |
+
+Raise a threshold if a legitimate long search or a multi-step rewrite of one file
+is being cut short. Lower it if you want the agent to give up sooner. Every field
+is documented in [Settings](/docs/reference/settings#agentcircuit).
+
+## After a stop
+
+The turn ends and the transcript names the shape. Interactive and piped runs both
+stop. A later prompt resets the check, so the same work can be retried with a
+different instruction.
+
+A sub-agent that trips is returned to the parent as a tool error. Other tasks in
+the same batch keep running.

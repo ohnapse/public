@@ -1,0 +1,97 @@
+---
+title: Tools
+description: The five built-in file tools plus task for delegation, with their arguments and risk levels.
+---
+
+# Tools
+
+Five built-in tools operate on files, and `task` delegates to a sub-agent. Every tool is
+rooted at the workspace directory and rejects a path that resolves outside it, before
+the [permission gate](/docs/guides/permissions) is even consulted.
+
+Each tool declares a risk level, which is what the tier resolves against when no
+explicit rule matches: **read-only** or **mutating**.
+
+## `read`
+
+Read the contents of a file in the workspace. Risk: read-only.
+
+| Argument | Type | Required | Description |
+| --- | --- | --- | --- |
+| `path` | string | yes | Workspace-relative file path |
+
+## `list`
+
+List files and directories, optionally filtered by a glob. Directories are marked with a
+trailing slash. Risk: read-only.
+
+| Argument | Type | Required | Description |
+| --- | --- | --- | --- |
+| `path` | string | no | Workspace-relative directory to list. Defaults to the workspace root |
+| `pattern` | string | no | Glob matched against workspace-relative paths, e.g. `**/*.go` |
+
+A listing is capped at 500 entries so a large repository cannot flood the context window
+in a single call. These directories are never walked: `.git`, `.ohnapse`,
+`node_modules`, `vendor`, `.next`, `dist`, `target`.
+
+## `grep`
+
+Search workspace files with a regular expression. Risk: read-only.
+
+| Argument | Type | Required | Description |
+| --- | --- | --- | --- |
+| `pattern` | string | yes | RE2 regular expression |
+| `path` | string | no | Workspace-relative subdirectory to search |
+
+Results are `file:line:text` and capped at 200 matches. `.git` and `.ohnapse` are
+skipped. The pattern is RE2, so backreferences and lookaround are not available; an
+invalid pattern comes back as a tool error rather than failing the run.
+
+## `write`
+
+Create a file with the given contents, or replace one wholesale. Parent directories are
+created as needed. Risk: mutating.
+
+| Argument | Type | Required | Description |
+| --- | --- | --- | --- |
+| `path` | string | yes | Workspace-relative file path |
+| `content` | string | yes | Full contents of the file |
+
+This is the only way the agent brings a new file into existence — `edit` deliberately
+refuses to, so that the model reaches for the obvious tool instead of guessing at a
+calling convention. The result distinguishes `created` from `overwrote`, which is the
+detail the model most often needs to correct course.
+
+## `edit`
+
+Replace an exact, unique string in an existing file. Risk: mutating.
+
+| Argument | Type | Required | Description |
+| --- | --- | --- | --- |
+| `path` | string | yes | Workspace-relative path to an existing file |
+| `old` | string | yes | Exact text to replace. Must appear exactly once in the file |
+| `new` | string | yes | Replacement text |
+
+A missing `old` string, or one appearing more than once, is returned as a tool error so
+the model can read the file and retry with more surrounding context. Ambiguity is never
+resolved by guessing which occurrence was meant.
+
+## `task`
+
+Delegate a self-contained unit of work to a sub-agent, which runs on its own and reports
+back. Risk: mutating — the sub-agent may write, and its own calls are gated individually
+behind a scoped gate. See [Delegation](/docs/guides/delegation).
+
+| Argument | Type | Required | Description |
+| --- | --- | --- | --- |
+| `agent` | string | yes | Which sub-agent to run. An enum of the available roles |
+| `prompt` | string | yes | Full instructions. The sub-agent cannot see the conversation, so this has to be self-contained |
+| `description` | string | no | Short imperative label shown in the transcript, e.g. `Create the README` |
+| `scope` | string[] | conditional | Path globs this task may write to, e.g. `["docs/**"]`. Required for any task that changes files, and must not overlap another task in the same turn |
+
+Omitting `description` falls back to the prompt's first line, truncated.
+
+<Callout type="planned">
+Shell execution, git, and MCP-provided tools are planned. The `exec` risk class already
+exists in the permission model, which is why rules such as `exec(git *)` validate today.
+</Callout>

@@ -1,0 +1,92 @@
+---
+title: Endpoint compatibility
+description: Why capabilities are measured rather than assumed, what oh doctor probes, and how to override the result.
+---
+
+# Endpoint compatibility
+
+Gateways and local servers implement the same dialects to different depths, and a gap
+is rarely reported as an error. A backend that drops tool calls just returns prose,
+which reads like a model that chose not to act. A backend that strips the text out of
+thinking blocks still delivers the blocks.
+
+So ohnapse measures rather than assumes.
+
+## oh doctor
+
+```sh
+oh doctor
+```
+
+`oh doctor` resolves your configured account exactly as a real run would, then probes
+the resolved endpoint and model for:
+
+- streaming
+- tool calls
+- parallel tool calls
+- thinking blocks
+- image input
+
+It prints what it found and caches the result in `.ohnapse/capabilities.json`.
+Features the endpoint lacks are switched off rather than attempted.
+
+Run it against any new endpoint. It costs a few small requests and it is the
+difference between a confusing session and a known-good one.
+
+## The pre-flight
+
+This matters most where one account serves the same model over two dialects, which is
+common on gateways. The two paths are rarely equivalent: the weaker one may intercept
+tool calls server-side and return an apologetic paragraph, or deliver thinking blocks
+with the text stripped out. Neither dialect is better in general.
+
+Before an unmeasured combination of profile, dialect, host, and model is used, ohnapse
+runs a two-request pre-flight. If the chosen dialect cannot round-trip a tool call
+while another dialect serves the same model, it measures that one too and keeps the
+better of the two.
+
+If a capability check finds the endpoint unable to call tools at all, the run says so
+up front — because otherwise it would fail in the one way that looks like success.
+
+Control it with `model.probe`:
+
+| Value | Behaviour |
+| --- | --- |
+| `auto` (default) | Measure a profile, dialect, host, and model combination the first time it is seen |
+| `off` | Never measure implicitly; only `oh doctor` probes |
+| `always` | Measure every run |
+
+## Precedence
+
+Capabilities are decided in ascending order of evidence:
+
+1. The adapter's name-based defaults.
+2. Whatever a probe measured.
+3. An explicit `providers.<name>.capabilities` override, which always wins.
+
+An override is worth setting for a local server, where support depends on whichever
+model is loaded and a measurement of today's model will be wrong tomorrow:
+
+```json
+{
+  "providers": {
+    "local": {
+      "api": "openai",
+      "baseURL": "http://localhost:11434/v1",
+      "capabilities": { "parallelTools": false, "images": false }
+    }
+  }
+}
+```
+
+Each field is optional; an omitted field keeps the built-in default. The four fields
+are `tools`, `parallelTools`, `thinking`, and `images` — see the
+[settings reference](/docs/reference/settings#providers).
+
+## Clearing a cached result
+
+Both caches live in the workspace and are safe to delete:
+
+- `.ohnapse/capabilities.json` — probe results.
+- `.ohnapse/dialects.json` — dialects settled by trial. `oh models --refresh` clears
+  these along with the model list.

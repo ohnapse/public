@@ -1,0 +1,52 @@
+---
+title: State directory
+description: What ohnapse keeps in .ohnapse/, which files are caches, and what is safe to delete.
+---
+
+# State directory
+
+Everything ohnapse keeps for a workspace lives in `.ohnapse/` at the workspace root.
+`oh init` creates it and adds it to `.gitignore`.
+
+```
+.ohnapse/
+├── settings.json          the only file you edit
+├── models.json            cached model discovery
+├── capabilities.json      cached probe results
+├── dialects.json          dialects settled by trial
+└── sessions/
+    └── <id>.json          persisted conversations
+```
+
+| File | Written by | Safe to delete |
+| --- | --- | --- |
+| `settings.json` | you, and `oh init` on first run | it holds your configuration |
+| `models.json` | `oh models` | yes — rebuilt on next use, or with `oh models --refresh` |
+| `capabilities.json` | `oh doctor` and the pre-flight | yes — re-measured on next use |
+| `dialects.json` | dialect resolution by trial | yes — re-decided on next use |
+| `sessions/<id>.json` | every run | yes, but you lose that conversation |
+
+Only `settings.json` is meant to be edited by hand. The three cache files exist so that
+a repeated run does not re-ask questions whose answers have not changed; deleting any of
+them costs a little latency and nothing else.
+
+## Credentials
+
+`providers.<name>.apiKey` in `settings.json` is a fallback for when an environment
+variable is inconvenient. It is why `oh init` adds `.ohnapse/` to `.gitignore` before
+anything else.
+
+Prefer `OHNAPSE_API_KEY_<PROFILE>` in your shell or secret manager. Full precedence
+rules are in [Providers](/docs/guides/providers#credentials).
+
+<Callout type="warning">
+If `.ohnapse/` reaches a commit with a real key in it, rotate the key. That is cheap
+before a push and expensive after.
+</Callout>
+
+## Version control
+
+The whole directory is git-ignored, caches and configuration alike. A team that wants a
+shared baseline should keep its own copy of `settings.json` in the repository — say
+`ohnapse.settings.json` — and have each developer copy it in, rather than un-ignoring a
+directory that also holds a credential slot.

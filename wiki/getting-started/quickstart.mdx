@@ -1,0 +1,96 @@
+---
+title: Quickstart
+description: Set a key, scaffold a workspace, and run your first prompt in the interactive UI or one-shot.
+---
+
+# Quickstart
+
+## 1. Set a credential
+
+```sh
+export ANTHROPIC_API_KEY=sk-example
+```
+
+The default configuration uses a profile named `anthropic`, and a profile named after
+a vendor falls back to that vendor's own environment variable. Any of the four
+supported vendors works the same way — see [Providers](/docs/guides/providers) for the
+full table and for pointing a profile at a gateway.
+
+## 2. Scaffold the workspace
+
+```sh
+cd your-project
+oh init
+```
+
+This creates a git-ignored `.ohnapse/` directory holding `settings.json` and a
+`sessions/` folder, and appends `.ohnapse/` to your `.gitignore`. It is idempotent:
+running it again leaves existing files untouched.
+
+## 3. See what the account serves
+
+```sh
+oh models    # model IDs, and the dialect each one arrives over
+oh doctor    # probe the endpoint and report what it supports
+```
+
+`oh models` is where you check that a model ID is spelled the way the host spells it.
+`oh doctor` is worth running once against any new endpoint, especially a gateway or a
+local server — see [Endpoint compatibility](/docs/guides/endpoint-compatibility).
+
+## 4. Run a prompt
+
+One-shot:
+
+```sh
+oh "add a doc comment to the Parse function in parser.go"
+```
+
+Or launch the interactive chat UI — a live transcript of the conversation and its tool
+activity, a prompt composer, and a running token-cost meter:
+
+```sh
+oh
+```
+
+| Key | Action |
+| --- | --- |
+| `enter` | send the prompt |
+| `ctrl+j` | insert a newline without sending |
+| `esc` | cancel the turn in flight |
+| `↑` / `↓` | recall previous prompts |
+| `pgup` / `pgdn` | scroll the transcript |
+| `y` / `n` | answer a permission request |
+| `?` | toggle the shortcut list |
+| `ctrl+c` | quit |
+
+Tool calls that need approval are confirmed in the UI itself. Piping in or out
+(`oh "…" | tee log`) skips the UI and streams plain text instead, with tool activity
+on stderr and the reply on stdout.
+
+The layout adapts to the terminal rather than wrapping: on a small window the session
+card sheds its release notes, then the endpoint host and provider name, and finally
+itself, while the prompt and run state always survive.
+
+## 5. Choose how much autonomy to grant
+
+The default tier is `auto-safe`: reads and in-workspace edits run automatically,
+anything that runs a command or touches the network asks first. Change it in
+`.ohnapse/settings.json`:
+
+```json
+{
+  "permission": {
+    "tier": "read-only"
+  }
+}
+```
+
+The three tiers and the per-tool rules that override them are covered in
+[Permissions](/docs/guides/permissions).
+
+## Next
+
+- [Providers](/docs/guides/providers) — accounts, dialects, gateways, credentials.
+- [Settings reference](/docs/reference/settings) — every key in `settings.json`.
+- [CLI reference](/docs/reference/cli) — every command, flag, and environment variable.

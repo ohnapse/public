@@ -1,0 +1,156 @@
+name: publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump-tap
+  cancel-in-progress: false
+
+jobs:
+  bump-tap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mint App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ohnapse
+          repositories: homebrew-tap
+
+      - name: Download checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "${{ github.event.release.tag_name }}" \
+            --repo ohnapse/public \
+            --pattern checksums.txt
+
+      - name: Render formula and commit
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+
+          TAG="${TAG#v}"
+          TAG="v${TAG}"
+          VER="${TAG#v}"
+          BASE="https://github.com/ohnapse/public/releases/download/${TAG}"
+
+          sum_for() {
+            file=$1
+            sum=$(awk -v f="$file" '
+              {
+                name = $2
+                sub(/^\*/, "", name)
+                if (name == f) { print $1; exit }
+              }
+            ' checksums.txt)
+            if [ -z "$sum" ]; then
+              echo "missing checksum for ${file}" >&2
+              cat checksums.txt >&2
+              exit 1
+            fi
+            printf '%s\n' "$sum"
+          }
+
+          asset() {
+            printf 'ohnapse_%s_%s_%s.tar.gz' "$VER" "$1" "$2"
+          }
+
+          DARWIN_ARM64=$(asset darwin arm64)
+          DARWIN_AMD64=$(asset darwin amd64)
+          LINUX_ARM64=$(asset linux arm64)
+          LINUX_AMD64=$(asset linux amd64)
+
+          SHA_DARWIN_ARM64=$(sum_for "$DARWIN_ARM64")
+          SHA_DARWIN_AMD64=$(sum_for "$DARWIN_AMD64")
+          SHA_LINUX_ARM64=$(sum_for "$LINUX_ARM64")
+          SHA_LINUX_AMD64=$(sum_for "$LINUX_AMD64")
+
+          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git clone https://github.com/ohnapse/homebrew-tap.git tap
+          git -C tap config user.name "ohnapse-ci[bot]"
+          git -C tap config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          mkdir -p tap/Formula tap/Aliases
+
+          python3 - "$VER" "$BASE" \
+            "$DARWIN_ARM64" "$SHA_DARWIN_ARM64" \
+            "$DARWIN_AMD64" "$SHA_DARWIN_AMD64" \
+            "$LINUX_ARM64" "$SHA_LINUX_ARM64" \
+            "$LINUX_AMD64" "$SHA_LINUX_AMD64" <<'PY'
+          import sys
+          from pathlib import Path
+
+          (
+              ver, base,
+              darwin_arm64, sha_darwin_arm64,
+              darwin_amd64, sha_darwin_amd64,
+              linux_arm64, sha_linux_arm64,
+              linux_amd64, sha_linux_amd64,
+          ) = sys.argv[1:]
+
+          Path("tap/Formula/ohnapse.rb").write_text(
+              "\n".join(
+                  [
+                      "class Ohnapse < Formula",
+                      '  desc "Terminal-native AI coding agent"',
+                      '  homepage "https://github.com/ohnapse"',
+                      f'  version "{ver}"',
+                      "  license :cannot_represent",
+                      "",
+                      "  on_macos do",
+                      "    on_arm do",
+                      f'      url "{base}/{darwin_arm64}"',
+                      f'      sha256 "{sha_darwin_arm64}"',
+                      "    end",
+                      "    on_intel do",
+                      f'      url "{base}/{darwin_amd64}"',
+                      f'      sha256 "{sha_darwin_amd64}"',
+                      "    end",
+                      "  end",
+                      "",
+                      "  on_linux do",
+                      "    on_arm do",
+                      f'      url "{base}/{linux_arm64}"',
+                      f'      sha256 "{sha_linux_arm64}"',
+                      "    end",
+                      "    on_intel do",
+                      f'      url "{base}/{linux_amd64}"',
+                      f'      sha256 "{sha_linux_amd64}"',
+                      "    end",
+                      "  end",
+                      "",
+                      "  def install",
+                      '    bin.install "ohnapse"',
+                      '    bin.install_symlink bin/"ohnapse" => "oh"',
+                      "  end",
+                      "",
+                      "  test do",
+                      '    assert_match version.to_s, shell_output("#{bin}/ohnapse version")',
+                      '    assert_match version.to_s, shell_output("#{bin}/oh version")',
+                      "  end",
+                      "end",
+                      "",
+                  ]
+              )
+          )
+          PY
+
+          ln -sfn ../Formula/ohnapse.rb tap/Aliases/oh
+
+          git -C tap add Formula/ohnapse.rb Aliases/oh
+          if git -C tap diff --cached --quiet; then
+            echo "formula unchanged"
+            exit 0
+          fi
+          git -C tap commit -m "ohnapse ${VER}"
+          git -C tap push origin HEAD:main

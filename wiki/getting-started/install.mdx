@@ -1,0 +1,73 @@
+---
+title: Install
+description: Install the ohnapse CLI with Homebrew or the install script.
+---
+
+# Install
+
+macOS and Linux:
+
+```sh
+brew install ohnapse/tap/ohnapse
+```
+
+That command auto-taps and trusts the formula, so afterwards `brew upgrade ohnapse`,
+`brew uninstall ohnapse`, and `brew info ohnapse` all work by short name. Both
+`ohnapse` and `oh` land on `PATH`.
+
+To also allow a bare `brew install ohnapse` on this machine, trust the formula once:
+
+```sh
+brew trust --formula ohnapse/tap/ohnapse
+```
+
+Anywhere with `curl` (no Homebrew required):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/ohnapse/public/main/install.sh | sh
+```
+
+The script downloads the latest release from
+[`ohnapse/public`](https://github.com/ohnapse/public/releases), checks its sha256
+against `checksums.txt`, and installs into `$HOME/.local/bin` with an `oh` symlink.
+Override the version or destination with `OHNAPSE_VERSION` and `OHNAPSE_INSTALL_DIR`.
+If the install directory is not on `PATH`, the script prints the line to add.
+
+Windows:
+
+```powershell
+irm https://raw.githubusercontent.com/ohnapse/public/main/install.ps1 | iex
+```
+
+Same environment variables as the Unix script. Releases are `.zip` on Windows.
+
+## Manual download
+
+Archives are `ohnapse_<version>_<os>_<arch>.tar.gz` on Linux and macOS, and `.zip` on
+Windows, published on the [`ohnapse/public` releases](https://github.com/ohnapse/public/releases)
+page together with `checksums.txt`. The binary inside is named `ohnapse`. Put it on
+`PATH` and symlink (or copy) it as `oh`.
+
+The Homebrew formula lives in [`ohnapse/homebrew-tap`](https://github.com/ohnapse/homebrew-tap).
+
+## Platforms
+
+| Platform | Kernel sandbox |
+| --- | --- |
+| Linux | Landlock, best-effort across kernel ABI versions |
+| macOS | Seatbelt, via a generated profile run through `sandbox-exec` |
+| Windows | None — the [permission model](/docs/guides/permissions) is the only guard |
+
+The Windows caveat is real and worth reading before you grant a tier above
+`read-only` there. See [Sandboxing](/docs/guides/sandboxing).
+
+## Verify
+
+```sh
+oh doctor
+```
+
+`oh doctor` resolves your configured account exactly as a real run would, then probes
+the endpoint and reports what it supports. It is the fastest way to confirm the
+binary, the credential, and the host all agree. It needs a configured workspace, so
+run [`oh init`](/docs/getting-started/quickstart) first.

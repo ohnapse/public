@@ -1,0 +1,118 @@
+---
+title: Providers
+description: Profiles name an account rather than a wire format, and the dialect is resolved for you.
+---
+
+# Providers
+
+`model.provider` names a **profile**: an account, being a host and a credential, under
+`providers`. The name is your own label — moving to a different model on the same
+account is a one-token edit to `model.id`, with nothing else to change.
+
+```json
+{
+  "model": { "provider": "gateway", "id": "claude-opus-4.8" },
+  "providers": {
+    "gateway": { "baseURL": "https://llm.example.com", "apiKey": "sk-example" }
+  }
+}
+```
+
+## The dialect is never written down
+
+The wire dialect is resolved once per run:
+
+1. An explicit `providers.<name>.api` pin wins.
+2. Otherwise a profile named after a dialect answers by name.
+3. Otherwise the host is asked what it serves, and the answer is cached in the
+   workspace.
+
+| Dialect | Profile name that pins it | API key environment variable | Notes |
+| --- | --- | --- | --- |
+| Anthropic | `anthropic` | `ANTHROPIC_API_KEY` | default |
+| OpenAI | `openai` | `OPENAI_API_KEY` | |
+| Azure OpenAI | `azure` | `AZURE_OPENAI_API_KEY` | needs `baseURL` and `deploymentName` |
+| Google Gemini | `google` | `GEMINI_API_KEY` or `GOOGLE_API_KEY` | |
+
+Use `providers.<name>.api` when discovery is unavailable or the automatic choice is
+wrong. Because a profile is a label and not a protocol, `model.provider` is
+deliberately not constrained to this list — `gateway`, `work`, and `local` are all
+valid profile names.
+
+<Callout type="planned">
+An AWS Bedrock dialect is planned. `api: "bedrock"` and the `region`, `accessKeyId`,
+and `secretAccessKey` fields are accepted by the schema but not yet implemented.
+</Callout>
+
+## Credentials
+
+A credential is read in this order:
+
+1. `OHNAPSE_API_KEY_<PROFILE>` — so the `gateway` profile above takes
+   `OHNAPSE_API_KEY_GATEWAY`.
+2. `providers.<name>.apiKey` in `settings.json`.
+3. The vendor's own variable from the table, **only** when the profile name matches
+   that vendor.
+
+That last restriction is the point: a profile you named yourself does not inherit a
+vendor variable, so one account's key cannot leak into another account's requests.
+
+Set `providers.<name>.baseURL`, or the `OHNAPSE_BASE_URL` environment variable, to
+point a profile at a gateway, an Azure resource, or a locally hosted server.
+
+For Anthropic, the proxy convention of `ANTHROPIC_AUTH_TOKEN` (sent as
+`Authorization: Bearer`) and `ANTHROPIC_BASE_URL` is honoured alongside
+`ANTHROPIC_API_KEY` (sent as `x-api-key`). An explicit `providers.anthropic` value
+always wins over either.
+
+## Listing what an account serves
+
+```sh
+oh models              # what the profile serves, and the dialect each model arrives over
+oh models --refresh    # re-ask the host, and re-decide any dialect settled by trial
+```
+
+The list is cached in `.ohnapse/models.json`. A host that exposes no model list is not
+a misconfiguration — the dialect is then settled by trying the candidates in order and
+keeping the one that answers, and that decision is cached in `.ohnapse/dialects.json`.
+
+## Azure OpenAI
+
+Azure identifies the model by deployment rather than by name, so `model.id` is
+informational there and the deployment selects what actually runs:
+
+```json
+{
+  "model": { "provider": "azure", "id": "gpt-4o" },
+  "providers": {
+    "azure": {
+      "baseURL": "https://your-resource.openai.azure.com",
+      "deploymentName": "your-deployment",
+      "apiVersion": "2024-10-21"
+    }
+  }
+}
+```
+
+## Local servers
+
+Any endpoint implementing one of the supported dialects works. A local server's
+feature support depends on whichever model happens to be loaded, so pinning the
+dialect and declaring capabilities explicitly saves a probe that would measure only
+today's model:
+
+```json
+{
+  "model": { "provider": "local", "id": "qwen2.5-coder" },
+  "providers": {
+    "local": {
+      "api": "openai",
+      "baseURL": "http://localhost:11434/v1",
+      "capabilities": { "parallelTools": false, "images": false }
+    }
+  }
+}
+```
+
+See [Endpoint compatibility](/docs/guides/endpoint-compatibility) for how capabilities
+are decided and why an override is sometimes the right answer.

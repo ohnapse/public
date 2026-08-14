@@ -1,0 +1,65 @@
+---
+title: Thinking and images
+description: Extended reasoning and image attachments, both gated on what the endpoint reports.
+---
+
+# Thinking and images
+
+Both are off unless the endpoint reports them. A feature the backend does not have is
+switched off rather than attempted — see
+[Endpoint compatibility](/docs/guides/endpoint-compatibility).
+
+## Extended thinking
+
+Set a token budget to ask for it:
+
+```json
+{
+  "model": {
+    "provider": "anthropic",
+    "id": "claude-sonnet-5",
+    "thinking": { "budgetTokens": 4096 }
+  }
+}
+```
+
+Omit `budgetTokens`, or set it to `0`, to disable thinking.
+
+The transcript shows `Thought for 3s`. That holds even on gateways that redact the
+reasoning text, since a duration only needs a start and a stop — a redacted block still
+tells you the model spent time on it.
+
+### Inline think tags
+
+Some OpenAI-compatible servers have no dedicated reasoning field and emit
+`<think>…</think>` inside ordinary text instead. Opt into treating that as reasoning:
+
+```json
+{
+  "model": {
+    "thinking": { "budgetTokens": 4096, "stripInlineTags": true }
+  }
+}
+```
+
+The default is `false` deliberately: a false positive would swallow real output, which
+is a worse failure than showing a stray tag.
+
+## Images
+
+Reference an image with an `@path` token in the prompt:
+
+```
+look at @mockup.png and match the spacing
+```
+
+The file is loaded relative to the workspace, sent as an attachment, and shown as a
+pill on the turn. The `@path` token itself is stripped from the text the model
+receives.
+
+A model without vision says so in the transcript — `… does not accept images; sending
+the prompt as text` — instead of failing inside an adapter or silently dropping what it
+was shown.
+
+A mistyped filename costs you a notice rather than the message you just wrote: the
+prompt is still sent, with the unresolvable reference reported alongside it.

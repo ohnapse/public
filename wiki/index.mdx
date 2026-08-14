@@ -1,0 +1,54 @@
+---
+title: Introduction
+description: A terminal-native AI coding agent that reads, searches, and edits your code under a kernel sandbox and a tiered permission model.
+---
+
+# ohnapse
+
+`ohnapse` (alias `oh`) is a terminal-native AI coding agent. It reads, searches, and
+edits files in your workspace, running its agent loop under a kernel sandbox and a
+tiered permission model — so it stays autonomous but strictly bounded.
+
+It ships as a single binary for Linux, macOS, and Windows.
+
+<Callout type="alpha">
+ohnapse is in **alpha**. The behaviour described in this documentation works today;
+anything not yet implemented is labelled as planned.
+</Callout>
+
+## Start here
+
+- [Install](/docs/getting-started/install) — Homebrew or the install script.
+- [Quickstart](/docs/getting-started/quickstart) — a key, a workspace, a first prompt.
+
+## What makes it different
+
+**Bounded by the kernel, not by good intentions.** File writes are confined by
+[Landlock on Linux and Seatbelt on macOS](/docs/guides/sandboxing), so a tool call
+cannot reach outside your workspace even if the model tries. Above that sits a
+three-tier [permission model](/docs/guides/permissions) with per-tool allow, deny,
+and ask rules.
+
+**Your account, not a wire format.** Configuration names an *account* — a host and a
+credential — rather than a protocol. Switching models on the same account is a
+one-token edit. See [Providers](/docs/guides/providers).
+
+**It measures instead of assuming.** Not every endpoint that claims compatibility
+really is; some silently swallow tool calls and answer with prose instead. `oh doctor`
+probes what your endpoint actually supports and caches the result. See
+[Endpoint compatibility](/docs/guides/endpoint-compatibility).
+
+**Parallel work, non-overlapping scopes.** Larger jobs are split across focused
+sub-agents that run concurrently under a shared budget, each confined to a declared
+slice of the tree. See [Delegation](/docs/guides/delegation).
+
+## Shipping today
+
+| Area | State |
+| --- | --- |
+| Providers | Anthropic, OpenAI, Azure OpenAI, Google Gemini |
+| Tools | `read`, `list`, `grep`, `write`, `edit`, plus `task` for delegation |
+| Permissions | Three tiers with allow, deny, and ask rules |
+| Sandbox | Landlock on Linux, Seatbelt on macOS; permission-only on Windows |
+| Interface | Interactive chat UI, or one-shot when piped |
+| Persistence | JSON sessions in the workspace |

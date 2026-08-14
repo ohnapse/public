@@ -1,0 +1,86 @@
+---
+title: Delegation
+description: The task tool hands self-contained work to scoped sub-agents that run in parallel and cannot delegate further.
+---
+
+# Delegation
+
+The model can split a request into independent units and run them at once with the
+`task` tool, each sub-agent getting the paths it alone owns as its scope.
+
+The value is context, not concurrency. A sub-agent that reads thirty files to answer
+one question spends thirty files of context and hands back a paragraph; the root
+conversation only ever sees the paragraph. Running several at once is a bonus the
+backend may or may not offer.
+
+## Built-in roles
+
+| Role | Tools | Mutating |
+| --- | --- | --- |
+| `explore` | `read`, `list`, `grep` | no |
+| `coder` | `read`, `list`, `grep`, `write`, `edit` | yes |
+
+Two roles is deliberate: one that gathers context and one that changes code. More
+roles are a configuration question rather than a code question — see
+[Custom roles](#custom-roles).
+
+## Scopes are enforced, not trusted
+
+A mutating task must declare a scope of path globs it owns. Enforcement happens in two
+independent places:
+
+**Admission control.** Before a parallel batch starts, every mutating agent in it must
+have a pairwise-disjoint scope. The test is conservative, so it may refuse a genuinely
+disjoint pair but can never admit an overlapping one. A refused call comes back as a
+tool error for the model to re-issue with better scopes.
+
+**The gate.** The permission gate then denies any write or command outside the
+sub-agent's own scope, ahead of rules and tier. An out-of-scope edit is impossible even
+if admission control was fooled.
+
+Reads stay unrestricted. Read-only agents skip the scope check entirely and any number
+of them can run at once, since concurrent reads cannot conflict.
+
+## Limits
+
+- Sub-agents **cannot delegate further**. The `task` tool is excluded from every
+  nested registry, so the tree is exactly one level deep.
+- Sub-agents share the root run's tool-call budget (`agent.maxToolCalls`, default 50).
+- The widest fan-out run at once is `agent.maxParallelTasks` (default 4); overflow runs
+  in the next wave.
+- A sub-agent that finishes without reporting anything is returned as a tool error
+  rather than as an empty success.
+
+In the interactive transcript each running task gets one live bullet, so a batch of
+four is four rows rather than four interleaved conversations. On the piped path, a
+sub-agent's tool calls are reported on stderr and its prose is dropped — several agents
+finishing at once would otherwise splice their summaries into the root's answer.
+
+## Custom roles
+
+Add roles under `agent.agents`. Reusing a built-in name replaces it.
+
+```json
+{
+  "agent": {
+    "maxParallelTasks": 4,
+    "agents": [
+      {
+        "name": "reviewer",
+        "description": "Reviews a diff for correctness and missing tests. Read-only.",
+        "prompt": "You review changes. Report problems with file paths and line numbers, most serious first.",
+        "tools": ["read", "list", "grep"],
+        "readOnly": true
+      }
+    ]
+  }
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `name` | Required. What the model passes as the `task` tool's `agent` argument |
+| `description` | What the role is for. The root agent reads it when choosing |
+| `prompt` | The sub-agent's own system prompt |
+| `tools` | Tool names the role may use. Omit for everything the parent has, minus `task` |
+| `readOnly` | Run without mutating tools, which also exempts it from scope checks |

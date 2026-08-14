@@ -1,0 +1,61 @@
+---
+title: Sandboxing
+description: Filesystem writes are confined by Landlock on Linux and Seatbelt on macOS. Windows has no kernel sandbox.
+---
+
+# Sandboxing
+
+The [permission model](/docs/guides/permissions) decides what the agent is allowed to
+ask for. The sandbox decides what the process is physically able to do. They are
+independent on purpose: a bug in the first does not reach past the second.
+
+## What is confined
+
+Filesystem writes are restricted to a set of roots:
+
+- the workspace directory,
+- the system temporary directory,
+- anything listed in `sandbox.additionalDirectories`.
+
+Outbound network access from sandboxed tool executions is off unless
+`sandbox.network` is `true`.
+
+```json
+{
+  "sandbox": {
+    "network": false,
+    "additionalDirectories": ["/home/you/scratch"]
+  }
+}
+```
+
+Reads are not confined by the sandbox. Restricting what the agent may read is the
+permission model's job — a `deny` rule such as `read(.env)` is the tool for that.
+
+## Per platform
+
+| Platform | Mechanism | Notes |
+| --- | --- | --- |
+| Linux | [Landlock](https://landlock.io/) | Applied best-effort across kernel ABI versions: a newer kernel enforces more of the policy than an older one |
+| macOS | Seatbelt | A profile is generated per run and applied through `sandbox-exec` |
+| Windows | None | The permission model is the only guard |
+
+<Callout type="warning">
+Windows has no kernel sandbox. On Windows, nothing stops a tool call at the OS level —
+the permission model is the entire boundary. Consider `read-only` or a tight set of
+`deny` rules there, and treat `full-auto` as unguarded.
+</Callout>
+
+## When the sandbox cannot be applied
+
+A kernel that predates Landlock, a container that blocks the syscall, or a platform
+with no support at all means the policy cannot be installed. ohnapse does not fail the
+run over it, and it does not stay quiet either: the session opens with a
+`sandbox degraded` notice in the transcript naming what went wrong.
+
+The notice is held rather than printed immediately, because the interactive UI is about
+to take the alternate screen and anything written to stderr first would be erased
+before you could read it.
+
+An unsupported platform is not reported as degradation — that is the expected state,
+and the table above says which platforms it applies to.

@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/ohnapse/public/main/schemas/ohnapse-settings.schema.json",
+  "title": "ohnapse settings",
+  "description": "Configuration for the ohnapse CLI, stored at .ohnapse/settings.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URI of this JSON schema, for editor validation."
+    },
+    "model": {
+      "type": "object",
+      "description": "Which account and model the agent uses.",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "Profile name: the key under 'providers' holding the account this run uses. The name is your own label and selects a host and a credential, not a wire format. A profile named after a dialect ('anthropic', 'openai', 'azure', 'google') also settles the dialect by name; any other name has it discovered from the host, or pinned with providers.<name>.api.",
+          "examples": [
+            "anthropic",
+            "openai",
+            "azure",
+            "google",
+            "gateway"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "description": "Model identifier passed to the endpoint (e.g. 'claude-sonnet-5', 'gpt-4o', 'gemini-1.5-pro'), spelled the way the host spells it — run 'oh models' to list them. For Azure this is informational; the deployment selects the model."
+        },
+        "maxTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum tokens to generate per response. Provider default when omitted."
+        },
+        "probe": {
+          "type": "string",
+          "description": "When to measure an endpoint's real capabilities before trusting them. auto: measure a profile/dialect/host/model combination the first time it is seen. off: never measure implicitly; only 'oh doctor' probes. always: measure every run.",
+          "enum": [
+            "auto",
+            "off",
+            "always"
+          ]
+        },
+        "thinking": {
+          "type": "object",
+          "description": "Extended reasoning. Off unless budgetTokens is set, and skipped entirely when the provider does not report a thinking capability.",
+          "additionalProperties": false,
+          "properties": {
+            "budgetTokens": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Token budget for reasoning. Omit or set 0 to disable thinking."
+            },
+            "stripInlineTags": {
+              "type": "boolean",
+              "description": "Treat <think>...</think> in ordinary text as reasoning, for OpenAI-compatible servers that lack a dedicated field. Default false: a false positive would swallow real output."
+            }
+          }
+        }
+      }
+    },
+    "providers": {
+      "type": "object",
+      "description": "Connection details per profile, keyed by the profile name used in model.provider. A profile is an account — a host and a credential — so one block serves every model that account exposes. Secrets are read from environment variables first (OHNAPSE_API_KEY_<PROFILE>); the fields here are an optional fallback.",
+      "additionalProperties": {
+        "$ref": "#/$defs/providerSettings"
+      }
+    },
+    "permission": {
+      "type": "object",
+      "description": "Autonomy tier plus per-tool allow/deny/ask rules. Rules are evaluated deny > allow > ask, then the tier default.",
+      "additionalProperties": false,
+      "properties": {
+        "tier": {
+          "type": "string",
+          "description": "Session autonomy. read-only: only reads. auto-safe: reads + in-workspace edits auto, exec/network confirmed. full-auto: everything auto (sandbox still enforced).",
+          "enum": [
+            "read-only",
+            "auto-safe",
+            "full-auto"
+          ]
+        },
+        "allow": {
+          "type": "array",
+          "description": "Rules that auto-approve matching tool calls.",
+          "items": {
+            "$ref": "#/$defs/permissionRule"
+          }
+        },
+        "deny": {
+          "type": "array",
+          "description": "Rules that block matching tool calls outright (highest precedence).",
+          "items": {
+            "$ref": "#/$defs/permissionRule"
+          }
+        },
+        "ask": {
+          "type": "array",
+          "description": "Rules that force a confirmation prompt for matching tool calls.",
+          "items": {
+            "$ref": "#/$defs/permissionRule"
+          }
+        }
+      }
+    },
+    "sandbox": {
+      "type": "object",
+      "description": "Kernel sandbox tuning (Landlock on Linux, Seatbelt on macOS).",
+      "additionalProperties": false,
+      "properties": {
+        "network": {
+          "type": "boolean",
+          "description": "Permit outbound network access from sandboxed tool executions. Default false."
+        },
+        "additionalDirectories": {
+          "type": "array",
+          "description": "Extra directories the sandbox may write to, beyond the workspace and a temp dir.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "description": "Agent loop tuning.",
+      "additionalProperties": false,
+      "properties": {
+        "maxToolCalls": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Hard per-run tool-call budget (backstop against runaway loops). Default 50."
+        },
+        "maxParallelTasks": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Widest delegation fan-out run at once. Overflow runs in the next wave. Default 4."
+        },
+        "agents": {
+          "type": "array",
+          "description": "Sub-agent roles available to the task tool, added to (or replacing by name) the built-in explore and coder.",
+          "items": {
+            "$ref": "#/$defs/agentDefinition"
+          }
+        }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "description": "Terminal interface options.",
+      "additionalProperties": false,
+      "properties": {
+        "theme": {
+          "type": "string",
+          "description": "Color theme for the interactive UI. 'mono' disables color, as does setting NO_COLOR in the environment.",
+          "enum": [
+            "default",
+            "forest",
+            "space",
+            "mono"
+          ]
+        }
+      }
+    },
+    "env": {
+      "type": "object",
+      "description": "PLANNED (accepted but not yet enforced): environment variables injected into tool executions.",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "hooks": {
+      "type": "object",
+      "description": "PLANNED (accepted but not yet enforced): commands to run on agent lifecycle events.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "matcher": {
+              "type": "string",
+              "description": "Optional tool-name matcher."
+            },
+            "command": {
+              "type": "string",
+              "description": "Shell command to run."
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    },
+    "mcpServers": {
+      "type": "object",
+      "description": "PLANNED (accepted but not yet enforced): MCP servers to connect for extra tools.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "env": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "command"
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "providerSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Connection details for one profile. Which fields are meaningful depends on the dialect the profile turns out to speak.",
+      "properties": {
+        "api": {
+          "type": "string",
+          "description": "Pin the wire dialect this profile speaks. An escape hatch: leave it out and the dialect is taken from the profile name, or discovered by asking the host what it serves. 'bedrock' is planned but not yet implemented.",
+          "enum": [
+            "anthropic",
+            "openai",
+            "azure",
+            "google",
+            "bedrock"
+          ]
+        },
+        "baseURL": {
+          "type": "string",
+          "description": "API base URL. Overrides the adapter default: an endpoint implementing one of the supported wire formats, a gateway fronting several model families, or a self-hosted deployment."
+        },
+        "apiKey": {
+          "type": "string",
+          "description": "API key fallback (environment variable is preferred). Stored in the git-ignored .ohnapse directory."
+        },
+        "deploymentName": {
+          "type": "string",
+          "description": "Azure OpenAI deployment name (Azure only)."
+        },
+        "apiVersion": {
+          "type": "string",
+          "description": "Azure OpenAI api-version (Azure only)."
+        },
+        "region": {
+          "type": "string",
+          "description": "AWS region (Bedrock only; planned)."
+        },
+        "accessKeyId": {
+          "type": "string",
+          "description": "AWS access key id (Bedrock only; planned)."
+        },
+        "secretAccessKey": {
+          "type": "string",
+          "description": "AWS secret access key (Bedrock only; planned)."
+        },
+        "capabilities": {
+          "type": "object",
+          "description": "Override the adapter's feature defaults for this endpoint. Each field is optional; omitted fields keep the built-in default. Run 'oh doctor' to see what the endpoint actually supports.",
+          "additionalProperties": false,
+          "properties": {
+            "tools": {
+              "type": "boolean",
+              "description": "Endpoint round-trips tool calls."
+            },
+            "parallelTools": {
+              "type": "boolean",
+              "description": "More than one tool call can arrive in a single turn."
+            },
+            "thinking": {
+              "type": "boolean",
+              "description": "Reasoning blocks are surfaced."
+            },
+            "images": {
+              "type": "boolean",
+              "description": "Image input is accepted."
+            }
+          }
+        }
+      }
+    },
+    "agentDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "One sub-agent role the root agent can delegate to.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name the model passes as the task tool's agent argument."
+        },
+        "description": {
+          "type": "string",
+          "description": "What this role is for. The root agent reads it when choosing."
+        },
+        "prompt": {
+          "type": "string",
+          "description": "System prompt for the sub-agent's own run."
+        },
+        "tools": {
+          "type": "array",
+          "description": "Tools this role may use. The task tool is never included, so a sub-agent cannot delegate further.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "readOnly": {
+          "type": "boolean",
+          "description": "Run without mutating tools, which also lets any number of these run in parallel regardless of scope."
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "permissionRule": {
+      "type": "string",
+      "description": "A tool name, or a tool name with a glob over the call's target. Globs support ? (one char), * (within a path segment), and ** (across segments). Examples: 'read', 'edit(src/**)', 'edit(.git/**)', 'exec(git *)'.",
+      "pattern": "^[A-Za-z0-9_*]+(\\(.*\\))?$"
+    }
+  }
+}

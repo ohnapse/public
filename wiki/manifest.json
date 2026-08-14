@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "title": "Overview",
+      "pages": ["index"]
+    },
+    {
+      "title": "Getting started",
+      "pages": ["getting-started/install", "getting-started/quickstart"]
+    },
+    {
+      "title": "Guides",
+      "pages": [
+        "guides/providers",
+        "guides/endpoint-compatibility",
+        "guides/permissions",
+        "guides/sandboxing",
+        "guides/delegation",
+        "guides/thinking-and-images"
+      ]
+    },
+    {
+      "title": "Reference",
+      "pages": [
+        "reference/cli",
+        "reference/settings",
+        "reference/tools",
+        "reference/state-directory"
+      ]
+    }
+  ]
+}

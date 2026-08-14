@@ -1,0 +1,96 @@
+---
+title: CLI reference
+description: Every command, flag, keybinding, and environment variable.
+---
+
+# CLI reference
+
+`ohnapse` and `oh` are the same program. Everything below applies to either name.
+
+## Commands
+
+### `oh`
+
+Run the agent in the current directory.
+
+```sh
+oh                  # interactive chat UI
+oh "your prompt"    # send that prompt
+```
+
+With a terminal on both stdin and stdout, this launches the interactive UI. A prompt
+given as an argument is sent as the first turn.
+
+When either end is piped, the UI is skipped and the run streams plain text: the reply
+on stdout, tool activity on stderr. A piped invocation needs a prompt argument —
+without one it exits with `no prompt: pass one as an argument, or run in a terminal for
+the interactive UI`.
+
+### `oh init`
+
+Scaffold the workspace. Creates `.ohnapse/` with a `sessions/` directory, writes a
+default `settings.json` if none exists, and appends `.ohnapse/` to `.gitignore`.
+Idempotent — existing files are left untouched.
+
+### `oh doctor`
+
+Resolve the configured account exactly as a real run would, then probe the endpoint for
+streaming, tool calls, parallel tool calls, thinking, and image input. Prints the
+findings and caches them in `.ohnapse/capabilities.json`. See
+[Endpoint compatibility](/docs/guides/endpoint-compatibility).
+
+### `oh models`
+
+List what the configured account serves, the dialect each model arrives over, and token
+limits.
+
+| Flag | Effect |
+| --- | --- |
+| `--refresh` | Re-ask the host instead of reading the cached list, and re-decide any dialect settled by trial |
+
+The list is cached in `.ohnapse/models.json`.
+
+## Interactive keybindings
+
+| Key | Action |
+| --- | --- |
+| `enter` | send the prompt |
+| `ctrl+j` | insert a newline without sending |
+| `esc` | cancel the turn in flight |
+| `↑` / `↓` | recall previous prompts |
+| `pgup` / `pgdn` | scroll the transcript |
+| `y` / `n` | answer a permission request |
+| `?` | toggle the shortcut list |
+| `ctrl+c` | quit |
+
+The status row carries the run state, the permission tier, the workspace, and a live
+token and cost cluster. On a narrow terminal it sheds them in order of value — the
+shortcut hint first, then cost, workspace, and tier — so the run state is the last
+thing standing rather than letting the two sides collide.
+
+A model with no price on file shows token counts without a dollar figure, rather than a
+confident `$0.0000`.
+
+## Environment variables
+
+| Variable | Effect |
+| --- | --- |
+| `OHNAPSE_API_KEY_<PROFILE>` | Credential for that profile. Highest precedence. `<PROFILE>` is upper-cased, so profile `gateway` reads `OHNAPSE_API_KEY_GATEWAY` |
+| `OHNAPSE_BASE_URL` | Base URL for the resolved profile |
+| `ANTHROPIC_API_KEY` | Used when the profile is named `anthropic`. Sent as `x-api-key` |
+| `ANTHROPIC_AUTH_TOKEN` | Anthropic proxy convention. Sent as `Authorization: Bearer` |
+| `ANTHROPIC_BASE_URL` | Anthropic proxy base URL |
+| `OPENAI_API_KEY` | Used when the profile is named `openai` |
+| `AZURE_OPENAI_API_KEY` | Used when the profile is named `azure` |
+| `GEMINI_API_KEY` / `GOOGLE_API_KEY` | Used when the profile is named `google` |
+| `NO_COLOR` | Forces the `mono` theme regardless of `ui.theme` |
+
+A vendor variable is only consulted when the profile name matches that vendor, so a
+profile you named yourself cannot pick up another account's key. Full precedence rules
+are in [Providers](/docs/guides/providers#credentials).
+
+## Exit behaviour
+
+Errors are written to stderr prefixed with the invoked binary's name, and the process
+exits non-zero. `ctrl+c` and `SIGINT` cancel the run through the same context the agent
+loop watches, so an in-flight request is abandoned rather than orphaned.

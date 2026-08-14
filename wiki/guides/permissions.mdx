@@ -1,0 +1,74 @@
+---
+title: Permissions
+description: Every tool call is gated by a tier and by allow, deny, and ask rules evaluated in that order.
+---
+
+# Permissions
+
+Every tool call is gated. Explicit per-tool rules are checked first, in the order
+**deny > allow > ask**; if none match, the call's risk is resolved against the session
+tier.
+
+## Tiers
+
+| Tier | Read | Edit in workspace | Run commands / network |
+| --- | --- | --- | --- |
+| `read-only` | auto | denied | denied |
+| `auto-safe` (default) | auto | auto | confirm |
+| `full-auto` | auto | auto | auto (sandbox still enforced) |
+
+`full-auto` removes the confirmation prompt, not the sandbox. Filesystem confinement
+still applies on Linux and macOS — see [Sandboxing](/docs/guides/sandboxing).
+
+In the interactive UI the active tier is shown in the status row, highlighted when it
+is `full-auto`, so an unusually permissive session is visible rather than forgotten.
+
+## Rules
+
+Rules are strings: a bare tool name, or a tool name with a glob over the call's
+target.
+
+```json
+{
+  "permission": {
+    "tier": "auto-safe",
+    "deny":  ["edit(.git/**)"],
+    "allow": ["read", "grep"],
+    "ask":   ["edit(**/*.sql)"]
+  }
+}
+```
+
+- `edit` — matches every `edit` call.
+- `edit(src/**)` — matches an `edit` whose target is under `src/`.
+- `read(.env)` — matches a `read` of exactly that path.
+- `*` as the tool name matches any tool.
+
+Globs support `?` (one character), `*` (within a path segment), and `**` (across
+segments). The same matcher is used for rules, delegation scopes, and the `list`
+tool's `pattern` argument, so the syntax is worth learning once.
+
+## Precedence, in full
+
+For a given tool call:
+
+1. A matching `deny` rule blocks it outright. Nothing overrides a deny.
+2. A matching `allow` rule approves it without asking.
+3. A matching `ask` rule forces a confirmation prompt.
+4. With no rule matching, the tier decides from the call's risk: read-only, mutating,
+   or command and network.
+
+Sub-agent scopes are enforced ahead of all of this. A write outside a delegated
+agent's scope is denied before rules or tier are consulted — see
+[Delegation](/docs/guides/delegation).
+
+## Answering a prompt
+
+In the interactive UI, a confirmation is answered in place with `y` or `n`; the
+program owns the terminal in raw mode, so permission questions arrive in the transcript
+rather than fighting it for stdin. On the piped path the prompt is written to stderr
+and read from stdin.
+
+Because a cancelled or refused turn can otherwise leave a tool call with no result
+behind — which providers reject on the following request — the whole turn is rolled
+back rather than half-kept.

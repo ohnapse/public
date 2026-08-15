@@ -1,0 +1,50 @@
+---
+title: Testing
+description: File bugs and alpha feedback. Never paste API keys.
+---
+
+# Testing
+
+ohnapse is in **alpha**. If you are running it on a real repo, the useful report is
+the one from your machine — not from ours.
+
+File it on GitHub using a template:
+
+**[Open an issue](https://github.com/ohnapse/public/issues/new/choose)**
+
+There are three templates: a **bug**, **testing feedback** from a real session, and a
+**docs** correction. Pick the one that matches. Unstructured issues are turned off so
+every report starts with a version and an OS.
+
+The same templates stay the reporting path through beta.
+
+## What to include
+
+- The output of `oh version`.
+- OS, and how you installed (Homebrew, curl, PowerShell, or a manual download).
+- For a session bug: the permission tier, whether the UI said the sandbox was
+  degraded, and numbered steps.
+- Provider and model id if the failure is on the wire. No keys.
+
+`oh doctor` output is useful once secrets are stripped. See
+[Endpoint compatibility](/docs/guides/endpoint-compatibility).
+
+## What not to paste
+
+- API keys, tokens, or `.ohnapse/settings.json` if it holds a key.
+- The raw session file under `.ohnapse/sessions/`. A short quote of the error is
+  enough.
+- Private source. Describe the work ("add tests around the parser"), not the tree.
+
+A required checkbox on every template asks you to confirm the report is clean of
+secrets. If a key does slip through, rotate it — editing the issue later does not
+un-publish the revision history.
+
+## What this is not
+
+There is no SLA and no status page. Anything not yet implemented is labelled as
+planned in these docs; filing "shell is missing" as a bug is only a docs miss if a
+page claimed it shipped.
+
+Releases and checksums stay on
+[`ohnapse/public` Releases](https://github.com/ohnapse/public/releases).

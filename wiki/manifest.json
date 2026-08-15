@@ -3,11 +3,17 @@
   "sections": [
     {
       "title": "Overview",
-      "pages": ["index"]
+      "pages": [
+        "index"
+      ]
     },
     {
       "title": "Getting started",
-      "pages": ["getting-started/install", "getting-started/quickstart"]
+      "pages": [
+        "getting-started/install",
+        "getting-started/quickstart",
+        "getting-started/testing"
+      ]
     },
     {
       "title": "Guides",

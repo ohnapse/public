@@ -71,6 +71,17 @@ wiki/
 `manifest.json` owns the order pages appear in. Each page carries its own `title` and
 `description` in frontmatter, and a page absent from the manifest is not published.
 
+## Issues
+
+ohnapse is in alpha. File bugs, session reports, and docs corrections here:
+
+**[Open an issue](https://github.com/ohnapse/public/issues/new/choose)**
+
+Use a template. Unstructured issues are turned off so every report starts with
+`oh version` and an OS. Never paste API keys, tokens, or a `settings.json` that holds
+a key — rotate anything that slips through; editing the issue does not un-publish the
+history.
+
 ---
 
 Contents are published for use with ohnapse; the tool itself is proprietary.

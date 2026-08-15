@@ -13,13 +13,16 @@ It ships as a single binary for Linux, macOS, and Windows.
 
 <Callout type="alpha">
 ohnapse is in **alpha**. The behaviour described in this documentation works today;
-anything not yet implemented is labelled as planned.
+anything not yet implemented is labelled as planned. Running it on a real repo?
+[File a bug or a session report](/docs/getting-started/testing) — never paste an API
+key.
 </Callout>
 
 ## Start here
 
-- [Install](/docs/getting-started/install) — Homebrew or the install script.
+- [Install](/docs/getting-started/install) — Homebrew, the curl script, or PowerShell.
 - [Quickstart](/docs/getting-started/quickstart) — a key, a workspace, a first prompt.
+- [Testing](/docs/getting-started/testing) — bugs and alpha feedback.
 
 ## What makes it different
 
@@ -51,4 +54,5 @@ slice of the tree. See [Delegation](/docs/guides/delegation).
 | Permissions | Three tiers with allow, deny, and ask rules |
 | Sandbox | Landlock on Linux, Seatbelt on macOS; permission-only on Windows |
 | Interface | Interactive chat UI, or one-shot when piped |
+| Loop detection | Repeating a failure, thrashing a file, or making no progress ends the turn |
 | Persistence | JSON sessions in the workspace |

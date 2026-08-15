@@ -1,0 +1,30 @@
+name: Docs
+description: The documentation does not match the binary, or a page is missing.
+title: "[docs] "
+labels: ["docs"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when a docs page is wrong, incomplete, or hard to act on. The canonical pages live in this repo under `wiki/`.
+
+        **Do not paste API keys.**
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      description: The path or title. Example — getting-started/quickstart, or "Install".
+      placeholder: getting-started/install
+    validations:
+      required: true
+  - type: textarea
+    id: wrong
+    attributes:
+      label: What is wrong or missing
+    validations:
+      required: true
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested correction
+      description: A sentence we can paste is better than a redesign.

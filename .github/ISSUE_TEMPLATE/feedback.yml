@@ -1,0 +1,89 @@
+name: Testing feedback
+description: A report from using ohnapse on a real repo during alpha or beta.
+title: "[feedback] "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the template for a session that mostly worked, or mostly did not, and you want us to hear about it. Use **Bug report** if something is outright broken.
+
+        **Do not paste API keys, tokens, `.ohnapse/settings.json` if it holds a key, or a raw session file.**
+  - type: checkboxes
+    id: secrets
+    attributes:
+      label: Secrets
+      options:
+        - label: This report does not contain API keys, tokens, or a settings file that holds a key.
+          required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: Version
+      description: Paste the output of `oh version`.
+      render: shell
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you installed
+      options:
+        - Homebrew (`brew install ohnapse/tap/ohnapse`)
+        - curl (`install.sh`)
+        - PowerShell (`install.ps1`)
+        - Manual download from Releases
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Provider and model
+      description: Profile name and model id only. No keys.
+      placeholder: anthropic / claude-opus-4.6
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you were trying to do
+      description: The kind of work, not the private source. "Add tests around the parser" is enough.
+    validations:
+      required: true
+  - type: textarea
+    id: went
+    attributes:
+      label: How it went
+      description: What the agent did well, where it stalled, where you had to take over.
+    validations:
+      required: true
+  - type: textarea
+    id: surprise
+    attributes:
+      label: What surprised you
+      description: Permission prompts, the sandbox, the TUI, a stop that ended the turn, a provider that swallowed tool calls — anything that was not what you assumed.
+  - type: textarea
+    id: missing
+    attributes:
+      label: What you reached for that is not there
+      description: A tool, a command, a setting. Saying it is missing is useful. We will not treat this as a commitment to build it.
+  - type: dropdown
+    id: again
+    attributes:
+      label: Would you run it again on a real repo?
+      options:
+        - Yes
+        - Yes, with reservations
+        - Not yet
+    validations:
+      required: true

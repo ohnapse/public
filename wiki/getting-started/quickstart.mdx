@@ -5,16 +5,26 @@ description: Set a key, scaffold a workspace, and run your first prompt in the i
 
 # Quickstart
 
+Install first if you have not: [Install](/docs/getting-started/install).
+
 ## 1. Set a credential
+
+The default configuration uses a profile named `anthropic`. A profile named after a
+vendor falls back to that vendor's own environment variable.
 
 ```sh
 export ANTHROPIC_API_KEY=sk-example
 ```
 
-The default configuration uses a profile named `anthropic`, and a profile named after
-a vendor falls back to that vendor's own environment variable. Any of the four
-supported vendors works the same way — see [Providers](/docs/guides/providers) for the
-full table and for pointing a profile at a gateway.
+Windows PowerShell:
+
+```powershell
+$env:ANTHROPIC_API_KEY = "sk-example"
+```
+
+Any of the four supported vendors works the same way — see
+[Providers](/docs/guides/providers) for the full table, for `OHNAPSE_API_KEY_<PROFILE>`,
+and for pointing a profile at an OpenAI- or Anthropic-compatible host.
 
 ## 2. Scaffold the workspace
 
@@ -72,6 +82,10 @@ The layout adapts to the terminal rather than wrapping: on a small window the se
 card sheds its release notes, then the endpoint host and provider name, and finally
 itself, while the prompt and run state always survive.
 
+A run that repeats a failure, thrashes one file, or makes no progress ends the turn
+rather than burning tokens until the tool-call budget. See
+[When ohnapse stops itself](/docs/guides/stopping).
+
 ## 5. Choose how much autonomy to grant
 
 The default tier is `auto-safe`: reads and in-workspace edits run automatically,
@@ -87,10 +101,15 @@ anything that runs a command or touches the network asks first. Change it in
 ```
 
 The three tiers and the per-tool rules that override them are covered in
-[Permissions](/docs/guides/permissions).
+[Permissions](/docs/guides/permissions). On Windows there is no kernel sandbox — stay
+on `read-only` until you have read [Sandboxing](/docs/guides/sandboxing).
 
 ## Next
 
-- [Providers](/docs/guides/providers) — accounts, dialects, gateways, credentials.
+- [Permissions](/docs/guides/permissions) — tiers and per-tool allow, deny, and ask rules.
+- [Sandboxing](/docs/guides/sandboxing) — Landlock, Seatbelt, and the Windows caveat.
+- [When ohnapse stops itself](/docs/guides/stopping) — loop detection and the tool-call budget.
+- [Providers](/docs/guides/providers) — accounts, dialects, compatible hosts, credentials.
 - [Settings reference](/docs/reference/settings) — every key in `settings.json`.
 - [CLI reference](/docs/reference/cli) — every command, flag, and environment variable.
+- [Testing](/docs/getting-started/testing) — file a bug or a session report.

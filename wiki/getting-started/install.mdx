@@ -1,6 +1,6 @@
 ---
 title: Install
-description: Install the ohnapse CLI with Homebrew or the install script.
+description: Install the ohnapse CLI with Homebrew, the curl script, or PowerShell.
 ---
 
 # Install
@@ -39,7 +39,9 @@ Windows:
 irm https://raw.githubusercontent.com/ohnapse/public/main/install.ps1 | iex
 ```
 
-Same environment variables as the Unix script. Releases are `.zip` on Windows.
+Same environment variables as the Unix script. Releases are `.zip` on Windows. There
+is no kernel sandbox on this platform — read [Sandboxing](/docs/guides/sandboxing)
+before you grant a tier above `read-only`.
 
 ## Manual download
 
@@ -58,9 +60,6 @@ The Homebrew formula lives in [`ohnapse/homebrew-tap`](https://github.com/ohnaps
 | macOS | Seatbelt, via a generated profile run through `sandbox-exec` |
 | Windows | None — the [permission model](/docs/guides/permissions) is the only guard |
 
-The Windows caveat is real and worth reading before you grant a tier above
-`read-only` there. See [Sandboxing](/docs/guides/sandboxing).
-
 ## Verify
 
 ```sh
@@ -71,3 +70,10 @@ oh doctor
 the endpoint and reports what it supports. It is the fastest way to confirm the
 binary, the credential, and the host all agree. It needs a configured workspace, so
 run [`oh init`](/docs/getting-started/quickstart) first.
+
+## Next
+
+[Quickstart](/docs/getting-started/quickstart) — set a key, scaffold a workspace, run
+a prompt.
+
+[Testing](/docs/getting-started/testing) — file a bug or a session report.

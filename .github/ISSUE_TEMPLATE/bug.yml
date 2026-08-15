@@ -1,0 +1,107 @@
+name: Bug report
+description: Something is broken, misleading, or fails on a real machine.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for running ohnapse on a machine that is not ours.
+
+        **Do not paste API keys, tokens, `.ohnapse/settings.json` if it holds a key, or a raw session file.** Quote the error and the steps. Strip anything that could authenticate.
+  - type: checkboxes
+    id: secrets
+    attributes:
+      label: Secrets
+      options:
+        - label: This report does not contain API keys, tokens, or a settings file that holds a key.
+          required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: Version
+      description: Paste the output of `oh version`.
+      render: shell
+      placeholder: ohnapse 0.1.0-alpha.1 (abc1234, 2026-08-14)
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you installed
+      options:
+        - Homebrew (`brew install ohnapse/tap/ohnapse`)
+        - curl (`install.sh`)
+        - PowerShell (`install.ps1`)
+        - Manual download from Releases
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Permission tier
+      options:
+        - read-only
+        - auto-safe (default)
+        - full-auto
+        - Not sure / not a session bug
+    validations:
+      required: true
+  - type: dropdown
+    id: sandbox
+    attributes:
+      label: Sandbox
+      options:
+        - Confined as expected
+        - UI said the sandbox was degraded
+        - Windows (permission model only)
+        - Not sure / not relevant
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Provider and model
+      description: Profile name and model id only. No keys, no base URL that embeds a secret.
+      placeholder: anthropic / claude-opus-4.6
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you saw, and how it was wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: Numbered steps. A prompt you are willing to share helps; a private codebase path does not.
+      placeholder: |
+        1. oh init
+        2. oh "…"
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Extra context
+      description: Terminal size, piped vs interactive, `oh doctor` output with secrets removed, anything else that would save a round trip.

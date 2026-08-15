@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/ohnapse/public/tree/main/wiki
+    about: Install, configuration, and how ohnapse behaves today.
+  - name: Releases
+    url: https://github.com/ohnapse/public/releases
+    about: Download a specific version or read the notes for a tag.

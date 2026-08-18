@@ -6,7 +6,7 @@ description: Extended reasoning and image attachments, both gated on what the en
 # Thinking and images
 
 Both are off unless the endpoint reports them. A feature the backend does not have is
-switched off rather than attempted — see
+switched off rather than attempted - see
 [Endpoint compatibility](/docs/guides/endpoint-compatibility).
 
 ## Extended thinking
@@ -26,7 +26,7 @@ Set a token budget to ask for it:
 Omit `budgetTokens`, or set it to `0`, to disable thinking.
 
 The transcript shows `Thought for 3s`. That holds even on gateways that redact the
-reasoning text, since a duration only needs a start and a stop — a redacted block still
+reasoning text, since a duration only needs a start and a stop - a redacted block still
 tells you the model spent time on it.
 
 ### Inline think tags
@@ -57,8 +57,8 @@ The file is loaded relative to the workspace, sent as an attachment, and shown a
 pill on the turn. The `@path` token itself is stripped from the text the model
 receives.
 
-A model without vision says so in the transcript — `… does not accept images; sending
-the prompt as text` — instead of failing inside an adapter or silently dropping what it
+A model without vision says so in the transcript - `… does not accept images; sending
+the prompt as text` - instead of failing inside an adapter or silently dropping what it
 was shown.
 
 A mistyped filename costs you a notice rather than the message you just wrote: the

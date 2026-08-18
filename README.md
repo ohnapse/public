@@ -47,8 +47,8 @@ JSON Schema (draft 2020-12) for the ohnapse CLI's settings file, `.ohnapse/setti
 }
 ```
 
-Any editor that resolves `$schema` — VS Code, JetBrains IDEs, Neovim with a JSON language
-server — will then validate keys, complete values, and surface the documentation for each
+Any editor that resolves `$schema` - VS Code, JetBrains IDEs, Neovim with a JSON language
+server - will then validate keys, complete values, and surface the documentation for each
 setting inline.
 
 The schema is closed (`additionalProperties: false`), so an unrecognised key is reported
@@ -56,7 +56,7 @@ as an error rather than ignored silently.
 
 ## Wiki
 
-`wiki/` holds the ohnapse documentation in MDX. It is the canonical copy — the
+`wiki/` holds the ohnapse documentation in MDX. It is the canonical copy - the
 documentation site renders it, so a correction here is a correction everywhere.
 
 ```
@@ -79,7 +79,7 @@ ohnapse is in alpha. File bugs, session reports, and docs corrections here:
 
 Use a template. Unstructured issues are turned off so every report starts with
 `oh version` and an OS. Never paste API keys, tokens, or a `settings.json` that holds
-a key — rotate anything that slips through; editing the issue does not un-publish the
+a key - rotate anything that slips through; editing the issue does not un-publish the
 history.
 
 ---

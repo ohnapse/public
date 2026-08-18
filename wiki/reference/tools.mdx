@@ -57,7 +57,7 @@ created as needed. Risk: mutating.
 | `path` | string | yes | Workspace-relative file path |
 | `content` | string | yes | Full contents of the file |
 
-This is the only way the agent brings a new file into existence — `edit` deliberately
+This is the only way the agent brings a new file into existence - `edit` deliberately
 refuses to, so that the model reaches for the obvious tool instead of guessing at a
 calling convention. The result distinguishes `created` from `overwrote`, which is the
 detail the model most often needs to correct course.
@@ -79,7 +79,7 @@ resolved by guessing which occurrence was meant.
 ## `task`
 
 Delegate a self-contained unit of work to a sub-agent, which runs on its own and reports
-back. Risk: mutating — the sub-agent may write, and its own calls are gated individually
+back. Risk: mutating - the sub-agent may write, and its own calls are gated individually
 behind a scoped gate. See [Delegation](/docs/guides/delegation).
 
 | Argument | Type | Required | Description |

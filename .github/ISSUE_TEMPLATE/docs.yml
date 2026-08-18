@@ -13,7 +13,7 @@ body:
     id: page
     attributes:
       label: Page
-      description: The path or title. Example — getting-started/quickstart, or "Install".
+      description: The path or title. Example - getting-started/quickstart, or "Install".
       placeholder: getting-started/install
     validations:
       required: true

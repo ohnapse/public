@@ -1,16 +1,23 @@
 ---
 title: State directory
-description: What ohnapse keeps in .ohnapse/, which files are caches, and what is safe to delete.
+description: What ohnapse keeps in .ohnapse/, which files are caches, and why the directory is git-ignored.
 ---
 
 # State directory
 
-Everything ohnapse keeps for a workspace lives in `.ohnapse/` at the workspace root.
-`oh init` creates it and adds it to `.gitignore`.
+Everything ohnapse keeps **for a workspace** lives in `.ohnapse/` at the directory
+you ran from. `oh init` creates it and adds `.ohnapse/` to `.gitignore` up front, so
+the whole directory is ignored whether or not you have saved a key.
+
+This is not the only place settings live. Shared policy is a committed
+[`ohnapse.json`](/docs/reference/settings#files) next to your code. Personal defaults
+for every project live in `~/.ohnapse/settings.json` under your home directory. Those
+are different files; `oh doctor` prints each as an absolute path so they cannot be
+confused.
 
 ```
 .ohnapse/
-├── settings.json          the only file you edit
+├── settings.json          workspace overlay (you edit this)
 ├── models.json            cached model discovery
 ├── capabilities.json      cached probe results
 ├── dialects.json          dialects settled by trial
@@ -20,21 +27,26 @@ Everything ohnapse keeps for a workspace lives in `.ohnapse/` at the workspace r
 
 | File | Written by | Safe to delete |
 | --- | --- | --- |
-| `settings.json` | you, and `oh init` on first run | it holds your configuration |
-| `models.json` | `oh models` | yes — rebuilt on next use, or with `oh models --refresh` |
-| `capabilities.json` | `oh doctor` and the pre-flight | yes — re-measured on next use |
-| `dialects.json` | dialect resolution by trial | yes — re-decided on next use |
+| `settings.json` | you, and `oh init` (`$schema` only) on first run | it holds this checkout's overlay |
+| `models.json` | `oh models` | yes - rebuilt on next use, or with `oh models --refresh` |
+| `capabilities.json` | `oh doctor` and the pre-flight | yes - re-measured on next use |
+| `dialects.json` | dialect resolution by trial | yes - re-decided on next use |
 | `sessions/<id>.json` | every run | yes, but you lose that conversation |
 
-Only `settings.json` is meant to be edited by hand. The three cache files exist so that
-a repeated run does not re-ask questions whose answers have not changed; deleting any of
-them costs a little latency and nothing else.
+`settings.json` is the only file in this directory meant to be edited by hand. The
+three cache files exist so that a repeated run does not re-ask questions whose answers
+have not changed; deleting any of them costs a little latency and nothing else.
+
+Do not put a committed settings file inside `.ohnapse/`. Team policy belongs in
+`ohnapse.json` in the tree. See [Settings](/docs/reference/settings#files) for every
+path and how the layers merge.
 
 ## Credentials
 
-`providers.<name>.apiKey` in `settings.json` is a fallback for when an environment
-variable is inconvenient. It is why `oh init` adds `.ohnapse/` to `.gitignore` before
-anything else.
+`providers.<name>.apiKey` in this `settings.json` (or in
+`~/.ohnapse/settings.json`) is a fallback for when an environment variable is
+inconvenient. It is why `oh init` adds `.ohnapse/` to `.gitignore` before anything
+else.
 
 Prefer `OHNAPSE_API_KEY_<PROFILE>` in your shell or secret manager. Full precedence
 rules are in [Providers](/docs/guides/providers#credentials).
@@ -46,7 +58,9 @@ before a push and expensive after.
 
 ## Version control
 
-The whole directory is git-ignored, caches and configuration alike. A team that wants a
-shared baseline should keep its own copy of `settings.json` in the repository — say
-`ohnapse.settings.json` — and have each developer copy it in, rather than un-ignoring a
-directory that also holds a credential slot.
+The whole `.ohnapse/` directory is git-ignored: caches, sessions, and the workspace
+overlay alike. Never un-ignore it.
+
+A team that wants a shared baseline commits `ohnapse.json` in the repository. ohnapse
+reads it on its own. There is nothing to copy into `.ohnapse/`, and `oh init` never
+writes the committed file.

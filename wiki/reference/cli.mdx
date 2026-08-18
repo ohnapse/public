@@ -22,21 +22,31 @@ With a terminal on both stdin and stdout, this launches the interactive UI. A pr
 given as an argument is sent as the first turn.
 
 When either end is piped, the UI is skipped and the run streams plain text: the reply
-on stdout, tool activity on stderr. A piped invocation needs a prompt argument —
+on stdout, tool activity on stderr. A piped invocation needs a prompt argument -
 without one it exits with `no prompt: pass one as an argument, or run in a terminal for
 the interactive UI`.
 
 ### `oh init`
 
-Scaffold the workspace. Creates `.ohnapse/` with a `sessions/` directory, writes a
-default `settings.json` if none exists, and appends `.ohnapse/` to `.gitignore`.
-Idempotent — existing files are left untouched.
+Scaffold the workspace. Creates `.ohnapse/` with a `sessions/` directory, writes
+`settings.json` with `$schema` only if none exists, and appends `.ohnapse/` to
+`.gitignore`. It does not pin a model, a permission tier, or a theme, and it never
+writes a committed `ohnapse.json`. Idempotent - existing files are left untouched.
 
 ### `oh doctor`
 
-Resolve the configured account exactly as a real run would, then probe the endpoint for
-streaming, tool calls, parallel tool calls, thinking, and image input. Prints the
+Print the settings cascade first: each layer in merge order, with its absolute path or
+`none` if that file is missing, then a provenance table. For every resolved key the
+table shows the winning layer, and `overrode <layer>` when another file also set it, so
+a fight is visible rather than only the winner. Deny rules are split into the org
+**floor** (every `ohnapse.json`) and **personal** (user and workspace). `apiKey` prints
+as `(set)` or `(unset)`, never the value. A committed file that contained a key
+produces a warning that names the file.
+
+Then resolve the configured account exactly as a real run would, and probe the endpoint
+for streaming, tool calls, parallel tool calls, thinking, and image input. Prints the
 findings and caches them in `.ohnapse/capabilities.json`. See
+[Settings](/docs/reference/settings#files) and
 [Endpoint compatibility](/docs/guides/endpoint-compatibility).
 
 ### `oh models`
@@ -66,7 +76,7 @@ oh version
 | Key | Action |
 | --- | --- |
 | `enter` | send the prompt |
-| `ctrl+j` | insert a newline without sending |
+| `shift+enter` | insert a newline without sending |
 | `esc` | cancel the turn in flight |
 | `↑` / `↓` | recall previous prompts |
 | `pgup` / `pgdn` | scroll the transcript |
@@ -75,8 +85,8 @@ oh version
 | `ctrl+c` | quit |
 
 The status row carries the run state, the permission tier, the workspace, and a live
-token and cost cluster. On a narrow terminal it sheds them in order of value — the
-shortcut hint first, then cost, workspace, and tier — so the run state is the last
+token and cost cluster. On a narrow terminal it sheds them in order of value - the
+shortcut hint first, then cost, workspace, and tier - so the run state is the last
 thing standing rather than letting the two sides collide.
 
 A model with no price on file shows token counts without a dollar figure, rather than a

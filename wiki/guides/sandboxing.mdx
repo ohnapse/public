@@ -30,7 +30,7 @@ Outbound network access from sandboxed tool executions is off unless
 ```
 
 Reads are not confined by the sandbox. Restricting what the agent may read is the
-permission model's job — a `deny` rule such as `read(.env)` is the tool for that.
+permission model's job - a `deny` rule such as `read(.env)` is the tool for that.
 
 ## Per platform
 
@@ -41,7 +41,7 @@ permission model's job — a `deny` rule such as `read(.env)` is the tool for th
 | Windows | None | The permission model is the only guard |
 
 <Callout type="warning">
-Windows has no kernel sandbox. On Windows, nothing stops a tool call at the OS level —
+Windows has no kernel sandbox. On Windows, nothing stops a tool call at the OS level -
 the permission model is the entire boundary. Consider `read-only` or a tight set of
 `deny` rules there, and treat `full-auto` as unguarded.
 </Callout>
@@ -57,5 +57,5 @@ The notice is held rather than printed immediately, because the interactive UI i
 to take the alternate screen and anything written to stderr first would be erased
 before you could read it.
 
-An unsupported platform is not reported as degradation — that is the expected state,
+An unsupported platform is not reported as degradation - that is the expected state,
 and the table above says which platforms it applies to.

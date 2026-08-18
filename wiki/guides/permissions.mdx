@@ -18,7 +18,7 @@ tier.
 | `full-auto` | auto | auto | auto (sandbox still enforced) |
 
 `full-auto` removes the confirmation prompt, not the sandbox. Filesystem confinement
-still applies on Linux and macOS — see [Sandboxing](/docs/guides/sandboxing).
+still applies on Linux and macOS - see [Sandboxing](/docs/guides/sandboxing).
 
 In the interactive UI the active tier is shown in the status row, highlighted when it
 is `full-auto`, so an unusually permissive session is visible rather than forgotten.
@@ -39,9 +39,9 @@ target.
 }
 ```
 
-- `edit` — matches every `edit` call.
-- `edit(src/**)` — matches an `edit` whose target is under `src/`.
-- `read(.env)` — matches a `read` of exactly that path.
+- `edit` - matches every `edit` call.
+- `edit(src/**)` - matches an `edit` whose target is under `src/`.
+- `read(.env)` - matches a `read` of exactly that path.
 - `*` as the tool name matches any tool.
 
 Globs support `?` (one character), `*` (within a path segment), and `**` (across
@@ -59,8 +59,26 @@ For a given tool call:
    or command and network.
 
 Sub-agent scopes are enforced ahead of all of this. A write outside a delegated
-agent's scope is denied before rules or tier are consulted — see
+agent's scope is denied before rules or tier are consulted - see
 [Delegation](/docs/guides/delegation).
+
+## Policy across files
+
+Settings merge from user defaults through committed `ohnapse.json` to the workspace
+overlay. The merge is tighten-only:
+
+- `deny` **unions**. A later file can add denies; `"deny": []` does not clear earlier
+  ones.
+- `allow` and `ask` **replace**. A later present list, including `[]`, is the whole
+  list. That is how a personal overlay drops power without accumulating an org
+  allow-list it cannot subtract from.
+- The gate is still **deny-first**. A replaced `allow` cannot undelete an org deny.
+
+`permission.tier` is later-wins: a workspace overlay can raise the tier. Protect the
+repository with `deny` rules in `ohnapse.json`, not by pinning `tier`.
+
+The merge kinds for every other key are in
+[Settings](/docs/reference/settings#merge-algebra).
 
 ## Answering a prompt
 
@@ -70,5 +88,5 @@ rather than fighting it for stdin. On the piped path the prompt is written to st
 and read from stdin.
 
 Because a cancelled or refused turn can otherwise leave a tool call with no result
-behind — which providers reject on the following request — the whole turn is rolled
+behind - which providers reject on the following request - the whole turn is rolled
 back rather than half-kept.

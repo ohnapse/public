@@ -22,7 +22,7 @@ Windows PowerShell:
 $env:ANTHROPIC_API_KEY = "sk-example"
 ```
 
-Any of the four supported vendors works the same way — see
+Any of the four supported vendors works the same way - see
 [Providers](/docs/guides/providers) for the full table, for `OHNAPSE_API_KEY_<PROFILE>`,
 and for pointing a profile at an OpenAI- or Anthropic-compatible host.
 
@@ -33,9 +33,11 @@ cd your-project
 oh init
 ```
 
-This creates a git-ignored `.ohnapse/` directory holding `settings.json` and a
-`sessions/` folder, and appends `.ohnapse/` to your `.gitignore`. It is idempotent:
-running it again leaves existing files untouched.
+This creates a git-ignored `.ohnapse/` directory holding a `sessions/` folder and a
+`settings.json` that contains only `$schema`, and appends `.ohnapse/` to your
+`.gitignore`. It does not pin a model or a permission tier, so team policy in a
+committed `ohnapse.json` still applies. It never writes `ohnapse.json`. It is
+idempotent: running it again leaves existing files untouched.
 
 ## 3. See what the account serves
 
@@ -46,7 +48,7 @@ oh doctor    # probe the endpoint and report what it supports
 
 `oh models` is where you check that a model ID is spelled the way the host spells it.
 `oh doctor` is worth running once against any new endpoint, especially a gateway or a
-local server — see [Endpoint compatibility](/docs/guides/endpoint-compatibility).
+local server - see [Endpoint compatibility](/docs/guides/endpoint-compatibility).
 
 ## 4. Run a prompt
 
@@ -56,7 +58,7 @@ One-shot:
 oh "add a doc comment to the Parse function in parser.go"
 ```
 
-Or launch the interactive chat UI — a live transcript of the conversation and its tool
+Or launch the interactive chat UI - a live transcript of the conversation and its tool
 activity, a prompt composer, and a running token-cost meter:
 
 ```sh
@@ -66,7 +68,7 @@ oh
 | Key | Action |
 | --- | --- |
 | `enter` | send the prompt |
-| `ctrl+j` | insert a newline without sending |
+| `shift+enter` | insert a newline without sending |
 | `esc` | cancel the turn in flight |
 | `↑` / `↓` | recall previous prompts |
 | `pgup` / `pgdn` | scroll the transcript |
@@ -89,8 +91,8 @@ rather than burning tokens until the tool-call budget. See
 ## 5. Choose how much autonomy to grant
 
 The default tier is `auto-safe`: reads and in-workspace edits run automatically,
-anything that runs a command or touches the network asks first. Change it in
-`.ohnapse/settings.json`:
+anything that runs a command or touches the network asks first. Change it in this
+checkout's overlay, `.ohnapse/settings.json`:
 
 ```json
 {
@@ -101,15 +103,15 @@ anything that runs a command or touches the network asks first. Change it in
 ```
 
 The three tiers and the per-tool rules that override them are covered in
-[Permissions](/docs/guides/permissions). On Windows there is no kernel sandbox — stay
+[Permissions](/docs/guides/permissions). On Windows there is no kernel sandbox - stay
 on `read-only` until you have read [Sandboxing](/docs/guides/sandboxing).
 
 ## Next
 
-- [Permissions](/docs/guides/permissions) — tiers and per-tool allow, deny, and ask rules.
-- [Sandboxing](/docs/guides/sandboxing) — Landlock, Seatbelt, and the Windows caveat.
-- [When ohnapse stops itself](/docs/guides/stopping) — loop detection and the tool-call budget.
-- [Providers](/docs/guides/providers) — accounts, dialects, compatible hosts, credentials.
-- [Settings reference](/docs/reference/settings) — every key in `settings.json`.
-- [CLI reference](/docs/reference/cli) — every command, flag, and environment variable.
-- [Testing](/docs/getting-started/testing) — file a bug or a session report.
+- [Permissions](/docs/guides/permissions) - tiers and per-tool allow, deny, and ask rules.
+- [Sandboxing](/docs/guides/sandboxing) - Landlock, Seatbelt, and the Windows caveat.
+- [When ohnapse stops itself](/docs/guides/stopping) - loop detection and the tool-call budget.
+- [Providers](/docs/guides/providers) - accounts, dialects, compatible hosts, credentials.
+- [Settings reference](/docs/reference/settings) - files, merge algebra, and every key.
+- [CLI reference](/docs/reference/cli) - every command, flag, and environment variable.
+- [Testing](/docs/getting-started/testing) - file a bug or a session report.

@@ -6,7 +6,7 @@ description: Profiles name an account rather than a wire format, and the dialect
 # Providers
 
 `model.provider` names a **profile**: an account, being a host and a credential, under
-`providers`. The name is your own label — moving to a different model on the same
+`providers`. The name is your own label - moving to a different model on the same
 account is a one-token edit to `model.id`, with nothing else to change.
 
 ```json
@@ -36,7 +36,7 @@ The wire dialect is resolved once per run:
 
 Use `providers.<name>.api` when discovery is unavailable or the automatic choice is
 wrong. Because a profile is a label and not a protocol, `model.provider` is
-deliberately not constrained to this list — `gateway`, `work`, and `local` are all
+deliberately not constrained to this list - `gateway`, `work`, and `local` are all
 valid profile names.
 
 <Callout type="planned">
@@ -48,14 +48,20 @@ and `secretAccessKey` fields are accepted by the schema but not yet implemented.
 
 A credential is read in this order:
 
-1. `OHNAPSE_API_KEY_<PROFILE>` — so the `gateway` profile above takes
+1. `OHNAPSE_API_KEY_<PROFILE>` - so the `gateway` profile above takes
    `OHNAPSE_API_KEY_GATEWAY`.
-2. `providers.<name>.apiKey` in `settings.json`.
+2. `providers.<name>.apiKey` in the user file (`~/.ohnapse/settings.json`) or the
+   workspace overlay (`.ohnapse/settings.json`).
 3. The vendor's own variable from the table, **only** when the profile name matches
    that vendor.
 
 That last restriction is the point: a profile you named yourself does not inherit a
 vendor variable, so one account's key cannot leak into another account's requests.
+
+Do not put `apiKey` or `secretAccessKey` in a committed `ohnapse.json`. Those fields
+are stripped before merge; a warning names the file. Treat that as a rotate event,
+not a silent ignore. Connection fields that are not secrets (`baseURL`, `api`,
+`deploymentName`) belong in the committed file when the team shares them.
 
 Set `providers.<name>.baseURL`, or the `OHNAPSE_BASE_URL` environment variable, to
 point a profile at a gateway, an Azure resource, or a locally hosted server.
@@ -73,7 +79,7 @@ oh models --refresh    # re-ask the host, and re-decide any dialect settled by t
 ```
 
 The list is cached in `.ohnapse/models.json`. A host that exposes no model list is not
-a misconfiguration — the dialect is then settled by trying the candidates in order and
+a misconfiguration - the dialect is then settled by trying the candidates in order and
 keeping the one that answers, and that decision is cached in `.ohnapse/dialects.json`.
 
 ## Azure OpenAI

@@ -46,7 +46,7 @@ while another dialect serves the same model, it measures that one too and keeps 
 better of the two.
 
 If a capability check finds the endpoint unable to call tools at all, the run says so
-up front — because otherwise it would fail in the one way that looks like success.
+up front - because otherwise it would fail in the one way that looks like success.
 
 Control it with `model.probe`:
 
@@ -80,13 +80,13 @@ model is loaded and a measurement of today's model will be wrong tomorrow:
 ```
 
 Each field is optional; an omitted field keeps the built-in default. The four fields
-are `tools`, `parallelTools`, `thinking`, and `images` — see the
+are `tools`, `parallelTools`, `thinking`, and `images` - see the
 [settings reference](/docs/reference/settings#providers).
 
 ## Clearing a cached result
 
 Both caches live in the workspace and are safe to delete:
 
-- `.ohnapse/capabilities.json` — probe results.
-- `.ohnapse/dialects.json` — dialects settled by trial. `oh models --refresh` clears
+- `.ohnapse/capabilities.json` - probe results.
+- `.ohnapse/dialects.json` - dialects settled by trial. `oh models --refresh` clears
   these along with the model list.

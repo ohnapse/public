@@ -21,7 +21,7 @@ backend may or may not offer.
 | `coder` | `read`, `list`, `grep`, `write`, `edit` | yes |
 
 Two roles is deliberate: one that gathers context and one that changes code. More
-roles are a configuration question rather than a code question — see
+roles are a configuration question rather than a code question - see
 [Custom roles](#custom-roles).
 
 ## Scopes are enforced, not trusted
@@ -46,7 +46,7 @@ of them can run at once, since concurrent reads cannot conflict.
 - Sub-agents **cannot delegate further**. The `task` tool is excluded from every
   nested registry, so the tree is exactly one level deep.
 - Sub-agents share the root run's tool-call budget (`agent.maxToolCalls`, default 50).
-  That budget is the hard cap behind the loop checks — see
+  That budget is the hard cap behind the loop checks - see
   [When ohnapse stops itself](/docs/guides/stopping).
 - A sub-agent that repeats a failure, thrashes a file, or makes no progress is
   stopped and returned as a tool error; siblings keep running.
@@ -57,7 +57,7 @@ of them can run at once, since concurrent reads cannot conflict.
 
 In the interactive transcript each running task gets one live bullet, so a batch of
 four is four rows rather than four interleaved conversations. On the piped path, a
-sub-agent's tool calls are reported on stderr and its prose is dropped — several agents
+sub-agent's tool calls are reported on stderr and its prose is dropped - several agents
 finishing at once would otherwise splice their summaries into the root's answer.
 
 ## Custom roles

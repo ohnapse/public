@@ -71,7 +71,7 @@ body:
     id: surprise
     attributes:
       label: What surprised you
-      description: Permission prompts, the sandbox, the TUI, a stop that ended the turn, a provider that swallowed tool calls — anything that was not what you assumed.
+      description: Permission prompts, the sandbox, the TUI, a stop that ended the turn, a provider that swallowed tool calls - anything that was not what you assumed.
   - type: textarea
     id: missing
     attributes:

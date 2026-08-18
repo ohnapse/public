@@ -7,22 +7,22 @@ description: A terminal-native AI coding agent that reads, searches, and edits y
 
 `ohnapse` (alias `oh`) is a terminal-native AI coding agent. It reads, searches, and
 edits files in your workspace, running its agent loop under a kernel sandbox and a
-tiered permission model — so it stays autonomous but strictly bounded.
+tiered permission model - so it stays autonomous but strictly bounded.
 
 It ships as a single binary for Linux, macOS, and Windows.
 
 <Callout type="alpha">
 ohnapse is in **alpha**. The behaviour described in this documentation works today;
 anything not yet implemented is labelled as planned. Running it on a real repo?
-[File a bug or a session report](/docs/getting-started/testing) — never paste an API
+[File a bug or a session report](/docs/getting-started/testing) - never paste an API
 key.
 </Callout>
 
 ## Start here
 
-- [Install](/docs/getting-started/install) — Homebrew, the curl script, or PowerShell.
-- [Quickstart](/docs/getting-started/quickstart) — a key, a workspace, a first prompt.
-- [Testing](/docs/getting-started/testing) — bugs and alpha feedback.
+- [Install](/docs/getting-started/install) - Homebrew, the curl script, or PowerShell.
+- [Quickstart](/docs/getting-started/quickstart) - a key, a workspace, a first prompt.
+- [Testing](/docs/getting-started/testing) - bugs and alpha feedback.
 
 ## What makes it different
 
@@ -32,8 +32,8 @@ cannot reach outside your workspace even if the model tries. Above that sits a
 three-tier [permission model](/docs/guides/permissions) with per-tool allow, deny,
 and ask rules.
 
-**Your account, not a wire format.** Configuration names an *account* — a host and a
-credential — rather than a protocol. Switching models on the same account is a
+**Your account, not a wire format.** Configuration names an *account* - a host and a
+credential - rather than a protocol. Switching models on the same account is a
 one-token edit. See [Providers](/docs/guides/providers).
 
 **It measures instead of assuming.** Not every endpoint that claims compatibility

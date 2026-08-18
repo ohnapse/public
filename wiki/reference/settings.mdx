@@ -1,12 +1,13 @@
 ---
 title: Settings reference
-description: Every key in .ohnapse/settings.json, with defaults and the published JSON Schema.
+description: Where settings files live, how layers merge, and every key in the published JSON Schema.
 ---
 
 # Settings reference
 
-`oh init` writes `.ohnapse/settings.json`. A missing file is not an error — built-in
-defaults apply, and any keys present merge onto them.
+Every settings file uses the same JSON shape. A missing file is not an error: compiled
+defaults apply, and each present file merges onto the previous layer. A file that
+exists but is not valid JSON stops the run and names that path.
 
 Every level of the schema is closed, so an unrecognised key is a validation error
 rather than a silent no-op. Reference the published schema for editor validation and
@@ -20,6 +21,80 @@ autocompletion:
 
 The schema itself is at
 [`schemas/ohnapse-settings.schema.json`](https://raw.githubusercontent.com/ohnapse/public/main/schemas/ohnapse-settings.schema.json).
+It is the file shape at every layer.
+
+## Files
+
+Later layers win, except `permission.deny`, which can only add rules. `oh doctor`
+prints each layer as an absolute path, or `none` if that file is missing.
+
+| Layer | Path | Who writes it |
+| --- | --- | --- |
+| Defaults | compiled in | ohnapse |
+| User | `~/.ohnapse/settings.json` | you. ohnapse never creates this file. On Windows: `%USERPROFILE%\.ohnapse\settings.json` |
+| Org / dir | `ohnapse.json` from the repository root down to the current directory, nearest last | the team. `oh init` never writes this |
+| Workspace | `.ohnapse/settings.json` in the current directory | you, and `oh init` (`$schema` only) |
+
+Outside a git repository, the only committed file considered is `ohnapse.json` in the
+current directory. Parent directories are not walked.
+
+`oh init` creates the workspace `.ohnapse/` directory, git-ignores it, and writes a
+`settings.json` that contains only `$schema`. It does not pin a model, a permission
+tier, or a theme, so a committed `ohnapse.json` is not overwritten the moment someone
+initialises a checkout. ohnapse never writes the user file or any `ohnapse.json`.
+
+Workspace state, caches, and sessions live under `.ohnapse/`. See
+[State directory](/docs/reference/state-directory).
+
+## Merge algebra
+
+Omit a key, or set it to JSON `null`, and the previous layer is left alone. An empty
+array `[]` is a present value: for a replace field it clears what came before.
+
+| Kind | Behaviour | Used for |
+| --- | --- | --- |
+| inherit | omit or JSON `null` leaves the previous layer | every key |
+| replace | a later present value wins, including `[]` | scalars; `permission.allow` and `permission.ask`; `log`; `hooks`; `mcpServers`; `sandbox.additionalDirectories` |
+| union | later can only add; cannot remove | `permission.deny` only |
+| keyed | merge by key; later replaces that entry | `providers`, `env`, `agent.agents` (by `name`), and objects such as `model` and `permission` |
+
+A later layer can **tighten**, never loosen an earlier deny. Replacing `allow` is how
+a personal overlay drops power it does not want without accumulating an org allow-list
+it cannot subtract from. The gate still evaluates deny first, so even a replaced
+`allow` cannot undelete an org deny. See
+[Permissions](/docs/guides/permissions#policy-across-files).
+
+`providers` merges by profile name; fields inside a profile merge the same way, so a
+committed `baseURL` and a personal `apiKey` on the same profile both apply.
+`agent.agents` replaces a role of the same `name` whole; unknown names append.
+
+`permission.tier` is later-wins. Protect a repository with `deny` rules in
+`ohnapse.json`, not by pinning `tier`.
+
+## Shared policy
+
+Commit `ohnapse.json` at the repository root (and, in a monorepo, optionally in a
+package directory) for a deny floor. Put no credentials in it: `apiKey` and
+`secretAccessKey` in a committed file are stripped before merge, a warning names the
+file, and the leak is a rotate event. Keys belong in the user or workspace file, or
+in the environment. See [Providers](/docs/guides/providers#credentials).
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/ohnapse/public/main/schemas/ohnapse-settings.schema.json",
+  "permission": {
+    "deny": [
+      "edit(.git/**)",
+      "edit(.env)",
+      "edit(.env.*)",
+      "exec(rm *)"
+    ]
+  }
+}
+```
+
+A package-level `ohnapse.json` merges after the root file, so a monorepo package can
+tighten policy without forking the root file.
 
 ## Defaults
 
@@ -45,7 +120,7 @@ Which account and model the agent uses.
 
 | Key | Type | Description |
 | --- | --- | --- |
-| `provider` | string | Profile name: the key under `providers` holding the account this run uses. Your own label — it selects a host and a credential, not a wire format. A profile named after a dialect also settles the dialect by name. Not an enum |
+| `provider` | string | Profile name: the key under `providers` holding the account this run uses. Your own label - it selects a host and a credential, not a wire format. A profile named after a dialect also settles the dialect by name. Not an enum |
 | `id` | string | Model identifier passed to the endpoint, spelled the way the host spells it. Run `oh models` to list them. For Azure this is informational; the deployment selects the model |
 | `maxTokens` | integer ≥ 1 | Maximum tokens to generate per response. Provider default when omitted |
 | `probe` | `auto` \| `off` \| `always` | When to measure an endpoint's real capabilities. Default `auto` |
@@ -58,27 +133,29 @@ a thinking capability. See [Thinking and images](/docs/guides/thinking-and-image
 | Key | Type | Description |
 | --- | --- | --- |
 | `budgetTokens` | integer ≥ 1 | Token budget for reasoning. Omit or set `0` to disable |
-| `stripInlineTags` | boolean | Treat `<think>…</think>` in ordinary text as reasoning, for OpenAI-compatible servers with no dedicated field. Default `false` — a false positive would swallow real output |
+| `stripInlineTags` | boolean | Treat `<think>…</think>` in ordinary text as reasoning, for OpenAI-compatible servers with no dedicated field. Default `false` - a false positive would swallow real output |
 
 ## `providers`
 
 Connection details per profile, keyed by the name used in `model.provider`. A profile is
-an account — a host and a credential — so one block serves every model that account
+an account - a host and a credential - so one block serves every model that account
 exposes.
 
 Secrets are read from the environment first (`OHNAPSE_API_KEY_<PROFILE>`); the fields
-here are an optional fallback. See [Providers](/docs/guides/providers).
+here are an optional fallback, and only in the user or workspace file. A committed
+`ohnapse.json` that contains `apiKey` or `secretAccessKey` has those fields stripped.
+See [Providers](/docs/guides/providers).
 
 | Key | Type | Description |
 | --- | --- | --- |
 | `api` | `anthropic` \| `openai` \| `azure` \| `google` \| `bedrock` | Pin the wire dialect. An escape hatch: leave it out and the dialect comes from the profile name, or is discovered from the host |
-| `baseURL` | string | API base URL. Overrides the adapter default — a gateway, a self-hosted deployment, or an Azure resource |
-| `apiKey` | string | API key fallback. The environment variable is preferred |
+| `baseURL` | string | API base URL. Overrides the adapter default - a gateway, a self-hosted deployment, or an Azure resource |
+| `apiKey` | string | API key fallback in the user or workspace file. The environment variable is preferred. Stripped from committed `ohnapse.json` |
 | `deploymentName` | string | Azure OpenAI deployment name (Azure only) |
 | `apiVersion` | string | Azure OpenAI `api-version` (Azure only) |
 | `region` | string | AWS region (Bedrock only; planned) |
 | `accessKeyId` | string | AWS access key id (Bedrock only; planned) |
-| `secretAccessKey` | string | AWS secret access key (Bedrock only; planned) |
+| `secretAccessKey` | string | AWS secret access key (Bedrock only; planned). Same file rules as `apiKey` |
 
 ### `providers.<name>.capabilities`
 
@@ -96,7 +173,8 @@ actually supports.
 ## `permission`
 
 Autonomy tier plus per-tool rules, evaluated deny > allow > ask, then the tier default.
-See [Permissions](/docs/guides/permissions).
+Across files, `deny` unions and `allow`/`ask` replace. See
+[Permissions](/docs/guides/permissions).
 
 | Key | Type | Description |
 | --- | --- | --- |
@@ -125,10 +203,10 @@ Agent loop tuning. See [Delegation](/docs/guides/delegation) and
 
 | Key | Type | Description |
 | --- | --- | --- |
-| `maxToolCalls` | integer ≥ 1 | Hard per-run tool-call budget. It sits behind the loop checks in [When ohnapse stops itself](/docs/guides/stopping) — a shape that is not recognised still dies here. Default 50 |
+| `maxToolCalls` | integer ≥ 1 | Hard per-run tool-call budget. It sits behind the loop checks in [When ohnapse stops itself](/docs/guides/stopping) - a shape that is not recognised still dies here. Default 50 |
 | `maxParallelTasks` | integer ≥ 1 | Widest delegation fan-out run at once; overflow runs in the next wave. Default 4 |
 | `circuit` | object | Thresholds for the three loop shapes that end a turn early. See [When ohnapse stops itself](/docs/guides/stopping) |
-| `agents` | object[] | Sub-agent roles available to the `task` tool, added to — or replacing by name — the built-in `explore` and `coder` |
+| `agents` | object[] | Sub-agent roles available to the `task` tool, added to - or replacing by name - the built-in `explore` and `coder` |
 
 ### `agent.circuit`
 

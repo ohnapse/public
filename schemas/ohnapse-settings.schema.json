@@ -28,7 +28,7 @@
         },
         "id": {
           "type": "string",
-          "description": "Model identifier passed to the endpoint (e.g. 'claude-sonnet-5', 'gpt-4o', 'gemini-1.5-pro'), spelled the way the host spells it — run 'oh models' to list them. For Azure this is informational; the deployment selects the model."
+          "description": "Model identifier passed to the endpoint (e.g. 'claude-sonnet-5', 'gpt-4o', 'gemini-1.5-pro'), spelled the way the host spells it - run 'oh models' to list them. For Azure this is informational; the deployment selects the model."
         },
         "maxTokens": {
           "type": "integer",
@@ -64,7 +64,7 @@
     },
     "providers": {
       "type": "object",
-      "description": "Connection details per profile, keyed by the profile name used in model.provider. A profile is an account — a host and a credential — so one block serves every model that account exposes. Secrets are read from environment variables first (OHNAPSE_API_KEY_<PROFILE>); the fields here are an optional fallback.",
+      "description": "Connection details per profile, keyed by the profile name used in model.provider. A profile is an account - a host and a credential - so one block serves every model that account exposes. Secrets are read from environment variables first (OHNAPSE_API_KEY_<PROFILE>); the fields here are an optional fallback.",
       "additionalProperties": {
         "$ref": "#/$defs/providerSettings"
       }
